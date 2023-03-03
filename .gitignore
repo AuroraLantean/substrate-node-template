@@ -15,3 +15,21 @@
 # direnv files
 .envrc
 .direnv
+
+# Local chain databases (defalut location)
+**/chains/
+# The cache for docker container dependency
+/.cargo/config
+
+# others
+archives
+
+.idea
+.vscode
+zz-*.sh
+rococo-*.json
+para-*-genesis
+para-*-wasm
+sweep.timestamp
+customSpec.json
+customSpecRaw.json

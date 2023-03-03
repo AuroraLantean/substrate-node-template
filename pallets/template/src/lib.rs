@@ -18,8 +18,11 @@ mod benchmarking;
 pub mod pallet {
 	use frame_support::pallet_prelude::*;
 	use frame_system::pallet_prelude::*;
+  use frame_support::inherent::Vec;
+  use log::{error, warn, info};
 
 	#[pallet::pallet]
+	//#[pallet::without_storage_info]
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 
@@ -28,7 +31,26 @@ pub mod pallet {
 	pub trait Config: frame_system::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+
+		#[pallet::constant]
+		type StringLimit: Get<u8>;
 	}
+
+	#[derive(Default, Encode, Decode, Clone, MaxEncodedLen, PartialEq, RuntimeDebug, TypeInfo)]
+	//#[scale_info(skip_type_params(T))]
+	//#[codec(mel_bound())]
+	pub struct UserInfo {
+		pub id: u32,
+		pub username: [u8; 20],
+    //BoundedVec<u8, T::StringLimit>,
+	}
+
+	//#[pallet::unbounded]
+	#[pallet::storage]
+	#[pallet::getter(fn info)]
+	/// Info on all of the info.
+	pub type AccountToUserInfo<T: Config> =
+		StorageMap<_, Blake2_128Concat, T::AccountId, UserInfo, OptionQuery>;//<T>
 
 	// The pallet's runtime storage items.
 	// https://docs.substrate.io/main-docs/build/runtime-storage/
@@ -45,7 +67,13 @@ pub mod pallet {
 	pub enum Event<T: Config> {
 		/// Event documentation should end with an array that provides descriptive names for event
 		/// parameters. [something, who]
-		SomethingStored { something: u32, who: T::AccountId },
+		SomethingStored {
+			something: u32,
+			who: T::AccountId,
+		},
+		UserAdded {
+			user: T::AccountId,
+		},
 	}
 
 	// Errors inform users that something went wrong.
@@ -55,6 +83,10 @@ pub mod pallet {
 		NoneValue,
 		/// Errors should have helpful documentation associated with them.
 		StorageOverflow,
+    VecToArray,
+    TooShort,
+    TooLong,
+    ByteSizeInvalid,
 	}
 
 	// Dispatchable functions allows users to interact with the pallet and invoke state changes.
@@ -62,6 +94,38 @@ pub mod pallet {
 	// Dispatchable functions must be annotated with a weight and must return a DispatchResult.
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
+		#[pallet::call_index(2)]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
+		pub fn add_user(
+			origin: OriginFor<T>,
+			id: u32,
+			username: Vec<u8>
+      //[u8; 20], Who is da Jonny Dipp => HexToText without 0x
+			//BoundedVec<u8, T::StringLimit>,
+		) -> DispatchResult {
+			let caller = ensure_signed(origin)?;
+      info!("called by {:?}", caller);
+      /*let bounded_name: BoundedVec<_, _> =
+				name.try_into().map_err(|_| Error::<T>::TooLong)?;
+      ensure!(bounded_name.len() >= T::MinLength::get() as usize, Error::<T>::TooShort);
+      */
+      info!("username: {:?}", username);
+      let explen = T::StringLimit::get() as usize;
+      let ulen = username.len();
+      info!("username len:{:?}, expected len:{:?}", ulen, explen);
+      let mut username2 = username;
+      username2.resize(explen, 0);
+      info!("username2: {:?}, len: {:?}", username2, username2.len());
+      ensure!(username2.len() == explen, Error::<T>::ByteSizeInvalid);
+
+      let arr = username2.try_into().map_err(|_| Error::<T>::VecToArray)?;
+			let new_user = UserInfo { username: arr, id };
+			<AccountToUserInfo<T>>::insert(&caller, new_user);
+
+			Self::deposit_event(Event::UserAdded { user: caller });
+			Ok(())
+		}
+
 		/// An example dispatchable that takes a singles value as a parameter, writes the value to
 		/// storage and emits an event. This function must be dispatched by a signed extrinsic.
 		#[pallet::call_index(0)]
