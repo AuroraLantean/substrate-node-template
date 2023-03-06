@@ -51,7 +51,7 @@ impl system::Config for Test {
 
 impl pallet_template::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
-	type StringLimit = ConstU8<20>;
+	type StringMax = ConstU8<20>;
 }
 
 // Build genesis storage according to the mock runtime.

@@ -335,7 +335,7 @@ impl pallet_sudo::Config for Runtime {
 /// Configure the pallet-template in pallets/template.
 impl pallet_template::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
-	type StringLimit = ConstU8<20>;
+	type StringMax = ConstU8<20>;
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
