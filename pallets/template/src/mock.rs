@@ -1,6 +1,7 @@
 use crate as pallet_template;
-use frame_support::traits::{ConstU16, ConstU64, ConstU8};
+use frame_support::traits::{ConstU128, ConstU16, ConstU32, ConstU64, ConstU8};
 use frame_system as system;
+use pallet_balances;
 use sp_core::H256;
 use sp_runtime::{
 	testing::Header,
@@ -9,6 +10,7 @@ use sp_runtime::{
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
+pub(crate) type Balance = u128;
 
 // Configure a mock runtime to test the pallet.
 frame_support::construct_runtime!(
@@ -18,7 +20,8 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system,
-		TemplateModule: pallet_template,
+	Balances: pallet_balances,
+		DaModule: pallet_template,
 	}
 );
 
@@ -52,6 +55,24 @@ impl system::Config for Test {
 impl pallet_template::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
 	type StringMax = ConstU8<20>;
+	type Currency = Balances;
+}
+
+/// Existential deposit.
+pub const EXISTENTIAL_DEPOSIT: u128 = 500;
+
+impl pallet_balances::Config for Test {
+	type MaxLocks = ConstU32<50>;
+	type MaxReserves = ();
+	type ReserveIdentifier = [u8; 8];
+	/// The type for recording an account's balance.
+	type Balance = Balance;
+	/// The ubiquitous event type.
+	type RuntimeEvent = RuntimeEvent;
+	type DustRemoval = ();
+	type ExistentialDeposit = ConstU128<EXISTENTIAL_DEPOSIT>;
+	type AccountStore = System;
+	type WeightInfo = pallet_balances::weights::SubstrateWeight<Test>;
 }
 
 // Build genesis storage according to the mock runtime.
