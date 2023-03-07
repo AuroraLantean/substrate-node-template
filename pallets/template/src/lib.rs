@@ -27,10 +27,9 @@ type AccountIdLookupOf<T> = <<T as frame_system::Config>::Lookup as StaticLookup
 #[frame_support::pallet]
 pub mod pallet {
   use super::*;
-	use frame_support::pallet_prelude::*;
+	use frame_support::{inherent::Vec, pallet_prelude::{*, ValueQuery}};
 	use frame_system::pallet_prelude::*;
-  use frame_support::inherent::Vec;
-  use log::{error, warn, info};
+  use log::info;//error, warn, 
 
 	#[pallet::pallet]
 	//#[pallet::without_storage_info]
@@ -70,6 +69,31 @@ pub mod pallet {
 	#[pallet::getter(fn usercount)]
 	pub type UserCount<T> = StorageValue<_, u32>;
 
+  #[pallet::storage]
+  #[pallet::getter(fn totalsupply)]
+  pub type TotalSupply<T> = StorageValue<_, u64, ValueQuery>;
+
+  #[pallet::storage]
+  #[pallet::getter(fn init)]
+  pub type Init<T: Config> = StorageValue<_, bool, ValueQuery>;
+
+  #[pallet::type_value]
+  pub(super) fn TotalSupplyDefaultValue<T: Config>() -> u64 {
+    21000000 //Zero::zero()
+  }
+
+	#[pallet::storage]
+	#[pallet::getter(fn balances)]
+	pub(super) type Balances<T: Config> =
+  StorageMap<_, Blake2_128Concat, T::AccountId, u64, ValueQuery>;
+	//pub type BalanceOf<T> =
+	//	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+
+  #[pallet::hooks]
+  impl <T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
+      //call on each block execution
+  }
+
 	// Pallets use events to inform users when important changes are made.
 	// https://docs.substrate.io/main-docs/build/events-errors/
 	#[pallet::event]
@@ -85,6 +109,12 @@ pub mod pallet {
 			user_index: u32,//from 1
 			user: T::AccountId,
 		},//deposit: BalanceOf<T>
+    /// Tokens was initialized by user
+    Initialized {initializer: T::AccountId, amount: u64},
+    /// Tokens successfully transferred between users
+    TransferSucceeded{
+      from: T::AccountId, to: T::AccountId, amount: u64},
+    //BalanceOf<T>),
 	}
 
 	// Errors inform users that usercount went wrong.
@@ -97,6 +127,12 @@ pub mod pallet {
     VecToArray,
     StringTooShort,
     StringTooLong,
+    /// Attempted to initialize the token after it had already been initialized.
+    AlreadyInitialized,
+    /// Attempted to transfer more funds than there are available
+    InsufficientFunds,
+    /// BalanceOverflow
+    BalanceOverflow
 	}
 
 	// Dispatchable functions allows users to interact with the pallet and invoke state changes.
@@ -104,6 +140,7 @@ pub mod pallet {
 	// Dispatchable functions must be annotated with a weight and must return a DispatchResult.
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
+    //------------------==
 		#[pallet::call_index(2)]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
 		pub fn add_user(
@@ -113,8 +150,8 @@ pub mod pallet {
       //[u8; 20], Who is da Jonny Dipp => HexToText without 0x
 			//BoundedVec<u8, T::StringMax>,
 		) -> DispatchResult {
-			let caller = ensure_signed(origin)?;
-      info!("called: {:?}", caller);
+			let from = ensure_signed(origin)?;
+      info!("from: {:?}", from);
       info!("username: {:?}", username);
       let explen = T::StringMax::get() as usize;
       let ulen = username.len();
@@ -136,19 +173,49 @@ pub mod pallet {
       <UserCount<T>>::put(new_uidx);
       info!("new_uidx: {:?}", new_uidx);
 			let user = UserInfo { id: new_uidx, username: arr, staked: 0u32};
-			<AccountToUserInfo<T>>::insert(&caller, user);
+			<AccountToUserInfo<T>>::insert(&from, user);
 
-			Self::deposit_event(Event::UserAdded { user_index: new_uidx, user: caller });
+			Self::deposit_event(Event::UserAdded { user_index: new_uidx, user: from });
 			Ok(())
 		}
 
+    //------------------==
 		#[pallet::call_index(3)]
 		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(1,1).ref_time())]
-		pub fn stake(origin: OriginFor<T>) -> DispatchResult {
-			let _who = ensure_signed(origin)?;
+		pub fn initialize(origin: OriginFor<T>, totalsupply: u64) -> DispatchResult {
+			let from = ensure_signed(origin)?;
+      ensure!(!<Init<T>>::get(), Error::<T>::AlreadyInitialized);
+      <TotalSupply<T>>::put(totalsupply);
+      info!("totalsupply: {:?}", totalsupply);
+      <Balances<T>>::insert(&from, totalsupply);
+
+      Init::<T>::put(true);//only once initialisation
+      Self::deposit_event(Event::Initialized{initializer: from, amount: totalsupply});
       Ok(())
 		}
 
+    //------------------==
+		#[pallet::call_index(4)]
+		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(1,1).ref_time())]
+		pub fn transfer(origin: OriginFor<T>, to: T::AccountId, amount: u64) -> DispatchResult {
+			let from = ensure_signed(origin)?;
+      let from_balance = <Balances<T>>::get(&from);
+      let to_balance = <Balances<T>>::get(&to);
+
+      let new_from_balance = from_balance.checked_sub(amount).ok_or(Error::<T>::InsufficientFunds)?;
+      //return Err(Error::<T>::NoneValue.into()),
+
+      let new_to_balance = to_balance.checked_add(amount).ok_or(Error::<T>::BalanceOverflow)?;
+
+      <Balances<T>>::insert(&from, new_from_balance);
+      <Balances<T>>::insert(&to, new_to_balance);
+
+      Self::deposit_event(Event::TransferSucceeded{
+        from, to, amount});
+      Ok(())
+		}
+
+    //------------------==
 		#[pallet::call_index(0)]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
 		pub fn reset_usercount(origin: OriginFor<T>, usercount: u32) -> DispatchResult {
@@ -166,6 +233,7 @@ pub mod pallet {
 			Ok(())
 		}
 
+    //------------------==
 		/// An example dispatchable that may throw a custom error.
 		#[pallet::call_index(1)]
 		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(1,1).ref_time())]

@@ -355,7 +355,7 @@ construct_runtime!(
 		TransactionPayment: pallet_transaction_payment,
 		Sudo: pallet_sudo,
 		// Include the custom logic from the pallet-template in the runtime.
-		TemplateModule: pallet_template,
+		DaModule: pallet_template,
 		Contracts: pallet_contracts,
 	}
 );
@@ -403,7 +403,7 @@ mod benches {
 		[frame_system, SystemBench::<Runtime>]
 		[pallet_balances, Balances]
 		[pallet_timestamp, Timestamp]
-		[pallet_template, TemplateModule]
+		[pallet_template, DaModule]
 	);
 }
 pub const CONTRACTS_DEBUG_OUTPUT: bool = true;
