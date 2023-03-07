@@ -43,6 +43,7 @@ pub mod pallet {
 	use frame_support::{
 		dispatch::DispatchResult,
 		sp_runtime::traits::AccountIdConversion,
+		sp_runtime::SaturatedConversion,
 		traits::{Currency, ExistenceRequirement::AllowDeath},
 	};
 	use frame_system::pallet_prelude::*;
@@ -125,7 +126,7 @@ pub mod pallet {
 		/// Tokens successfully transferred between users
 		TransferSucceeded { from: T::AccountId, to: T::AccountId, amount: u64 },
 		/// Staking
-		StakingReceived { from: T::AccountId, amount: BalanceOf<T>, pallet_balance: BalanceOf<T> },
+		StakingReceived { from: T::AccountId, amount: u32, pallet_balance: BalanceOf<T> },
 		/// An imbalance from elsewhere in the runtime has been absorbed by the pallet
 		ImbalanceAbsorbed { from_balance: BalanceOf<T>, to_balance: BalanceOf<T> },
 	}
@@ -147,6 +148,7 @@ pub mod pallet {
 		/// BalanceOverflow
 		BalanceOverflow,
 		TransferFailed,
+		UserDoesNotExist,
 	}
 
 	impl<T: Config> Pallet<T> {
@@ -185,13 +187,35 @@ pub mod pallet {
 		//------------------==
 		#[pallet::call_index(5)]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
-		pub fn stake(origin: OriginFor<T>, amount: BalanceOf<T>) -> DispatchResult {
+		pub fn stake(origin: OriginFor<T>, amount: u32) -> DispatchResult {
 			let from = ensure_signed(origin)?;
 			info!("from: {:?}, amount:{:?}", from, amount);
+			info!("pallet_balance: {:?}", Self::pot());
+
+			//u32 uses .into()
+			let amt_bal: BalanceOf<T> = amount.into();
+			//let amt_bal: BalanceOf<T> = amount_u64.try_into().ok();
+			//let amt_bal: BalanceOf<T> = amount_u128.saturated_into::<BalanceOf<T>>();
 
 			//Operation may result in account going out of existence
-			T::Currency::transfer(&from, &Self::account_id(), amount, AllowDeath)
+			T::Currency::transfer(&from, &Self::account_id(), amt_bal, AllowDeath)
 				.map_err(|_| Error::<T>::TransferFailed)?;
+			//T::Currency::reserve(&sender, deposit)?;
+			//let err_amount = T::Currency::unreserve(&sender, deposit);
+			//debug_assert!(err_amount.is_zero());
+
+			let mut user =
+				<AccountToUserInfo<T>>::get(&from).ok_or_else(|| Error::<T>::UserDoesNotExist)?;
+			info!("user: {:?}", user);
+
+			let staked_new = user.staked.checked_add(amount).ok_or(Error::<T>::StorageOverflow)?;
+			info!("staked_new: {:?}", staked_new);
+
+			user.staked = staked_new;
+			info!("user updated: {:?}", user);
+			info!("pallet_balance: {:?}", Self::pot());
+
+			<AccountToUserInfo<T>>::insert(&from, user);
 			Self::deposit_event(Event::<T>::StakingReceived {
 				from,
 				amount,
@@ -199,12 +223,53 @@ pub mod pallet {
 			});
 			Ok(())
 		}
+		#[pallet::call_index(6)]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
+		pub fn unstake(_origin: OriginFor<T>) -> DispatchResult {
+			//T::ForceOrigin::ensure_origin(origin)?;
+			Ok(())
+		}
+		#[pallet::call_index(7)]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
+		pub fn withdraw(origin: OriginFor<T>, amount: u32) -> DispatchResult {
+			let from = ensure_signed(origin)?;
+			info!("from: {:?}, amount:{:?}", from, amount);
+			info!("pallet_balance: {:?}", Self::pot());
+
+			//u32 uses .into()
+			let amt_bal: BalanceOf<T> = amount.into();
+
+			let mut user =
+				<AccountToUserInfo<T>>::get(&from).ok_or_else(|| Error::<T>::UserDoesNotExist)?;
+			info!("user: {:?}", user);
+
+			let staked_new =
+				user.staked.checked_sub(amount).ok_or(Error::<T>::InsufficientFunds)?;
+			info!("staked_new: {:?}", staked_new);
+
+			user.staked = staked_new;
+			info!("user updated: {:?}", user);
+
+			//Operation may result in account going out of existence
+			T::Currency::transfer(&Self::account_id(), &from, amt_bal, AllowDeath)
+				.map_err(|_| Error::<T>::TransferFailed)?;
+			info!("pallet_balance: {:?}", Self::pot());
+
+			<AccountToUserInfo<T>>::insert(&from, user);
+			Self::deposit_event(Event::<T>::StakingReceived {
+				from,
+				amount,
+				pallet_balance: Self::pot(),
+			});
+
+			Ok(())
+		}
 		//------------------==
 		#[pallet::call_index(2)]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
 		pub fn add_user(
 			origin: OriginFor<T>,
-			num_one: u32,
+			user_id: u32,
 			username: Vec<u8>,
 			//[u8; 20], Who is da Jonny Dipp => HexToText without 0x
 			//BoundedVec<u8, T::StringMax>,
@@ -223,17 +288,17 @@ pub mod pallet {
 
 			let arr = username2.try_into().map_err(|_| Error::<T>::VecToArray)?;
 
-			let new_uidx = match <UserCount<T>>::get() {
+			let user_count = match <UserCount<T>>::get() {
 				None => 1,
 				//return Err(Error::<T>::NoneValue.into()),
 				Some(old) => old.checked_add(1).ok_or(Error::<T>::StorageOverflow)?,
 			};
-			<UserCount<T>>::put(new_uidx);
-			info!("new_uidx: {:?}", new_uidx);
-			let user = UserInfo { id: new_uidx, username: arr, staked: 0u32 };
+			<UserCount<T>>::put(user_count);
+			info!("user_count: {:?}", user_count);
+			let user = UserInfo { id: user_id, username: arr, staked: 0u32 };
 			<AccountToUserInfo<T>>::insert(&from, user);
 
-			Self::deposit_event(Event::UserAdded { user_index: new_uidx, user: from });
+			Self::deposit_event(Event::UserAdded { user_index: user_id, user: from });
 			Ok(())
 		}
 
