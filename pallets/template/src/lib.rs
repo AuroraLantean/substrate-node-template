@@ -43,7 +43,7 @@ pub mod pallet {
 	use frame_support::{
 		dispatch::DispatchResult,
 		sp_runtime::traits::AccountIdConversion,
-		sp_runtime::SaturatedConversion,
+		//sp_runtime::SaturatedConversion,
 		traits::{Currency, ExistenceRequirement::AllowDeath},
 	};
 	use frame_system::pallet_prelude::*;
@@ -75,7 +75,7 @@ pub mod pallet {
 		pub id: u32,
 		pub username: [u8; 20],
 		//BoundedVec<u8, T::StringMax>,
-		pub staked: u32,
+		pub staked: u64,
 	}
 
 	//#[pallet::unbounded]
@@ -126,7 +126,7 @@ pub mod pallet {
 		/// Tokens successfully transferred between users
 		TransferSucceeded { from: T::AccountId, to: T::AccountId, amount: u64 },
 		/// Staking
-		StakingReceived { from: T::AccountId, amount: u32, pallet_balance: BalanceOf<T> },
+		StakingReceived { from: T::AccountId, amount: u64, pallet_balance: BalanceOf<T> },
 		/// An imbalance from elsewhere in the runtime has been absorbed by the pallet
 		ImbalanceAbsorbed { from_balance: BalanceOf<T>, to_balance: BalanceOf<T> },
 	}
@@ -136,19 +136,22 @@ pub mod pallet {
 	pub enum Error<T> {
 		/// Error names should be descriptive.
 		NoneValue,
-		/// Errors should have helpful documentation associated with them.
-		StorageOverflow,
 		VecToArray,
 		StringTooShort,
 		StringTooLong,
 		/// Attempted to initialize the token after it had already been initialized.
 		AlreadyInitialized,
+		UserCountOverflow,
+		StakedOverflow,
+		InsufficientStaked,
 		/// Attempted to transfer more funds than there are available
-		InsufficientFunds,
-		/// BalanceOverflow
+		InsufficientBalance,
 		BalanceOverflow,
 		TransferFailed,
 		UserDoesNotExist,
+		ConvertU64ToBalance,
+		InsufficientTokens,
+		TokenOverflow,
 	}
 
 	impl<T: Config> Pallet<T> {
@@ -187,14 +190,14 @@ pub mod pallet {
 		//------------------==
 		#[pallet::call_index(5)]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
-		pub fn stake(origin: OriginFor<T>, amount: u32) -> DispatchResult {
+		pub fn stake(origin: OriginFor<T>, amount: u64) -> DispatchResult {
 			let from = ensure_signed(origin)?;
 			info!("from: {:?}, amount:{:?}", from, amount);
 			info!("pallet_balance: {:?}", Self::pot());
 
-			//u32 uses .into()
-			let amt_bal: BalanceOf<T> = amount.into();
-			//let amt_bal: BalanceOf<T> = amount_u64.try_into().ok();
+			//let amt_bal: BalanceOf<T> = amount_u32.into();
+			let amt_bal: BalanceOf<T> =
+				amount.try_into().map_err(|_| Error::<T>::ConvertU64ToBalance)?;
 			//let amt_bal: BalanceOf<T> = amount_u128.saturated_into::<BalanceOf<T>>();
 
 			//Operation may result in account going out of existence
@@ -208,7 +211,8 @@ pub mod pallet {
 				<AccountToUserInfo<T>>::get(&from).ok_or_else(|| Error::<T>::UserDoesNotExist)?;
 			info!("user: {:?}", user);
 
-			let staked_new = user.staked.checked_add(amount).ok_or(Error::<T>::StorageOverflow)?;
+			let staked_new =
+				user.staked.checked_add(amount).ok_or_else(|| Error::<T>::StakedOverflow)?;
 			info!("staked_new: {:?}", staked_new);
 
 			user.staked = staked_new;
@@ -216,6 +220,12 @@ pub mod pallet {
 			info!("pallet_balance: {:?}", Self::pot());
 
 			<AccountToUserInfo<T>>::insert(&from, user);
+
+			let tok_bal = <Balances<T>>::get(&from);
+			let new_tok_bal =
+				tok_bal.checked_add(amount).ok_or_else(|| Error::<T>::TokenOverflow)?;
+			<Balances<T>>::insert(&from, new_tok_bal);
+
 			Self::deposit_event(Event::<T>::StakingReceived {
 				from,
 				amount,
@@ -231,31 +241,36 @@ pub mod pallet {
 		}
 		#[pallet::call_index(7)]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
-		pub fn withdraw(origin: OriginFor<T>, amount: u32) -> DispatchResult {
+		pub fn withdraw(origin: OriginFor<T>, amount: u64) -> DispatchResult {
 			let from = ensure_signed(origin)?;
 			info!("from: {:?}, amount:{:?}", from, amount);
 			info!("pallet_balance: {:?}", Self::pot());
 
-			//u32 uses .into()
-			let amt_bal: BalanceOf<T> = amount.into();
+			let amt_bal: BalanceOf<T> =
+				amount.try_into().map_err(|_| Error::<T>::ConvertU64ToBalance)?;
 
 			let mut user =
 				<AccountToUserInfo<T>>::get(&from).ok_or_else(|| Error::<T>::UserDoesNotExist)?;
 			info!("user: {:?}", user);
 
 			let staked_new =
-				user.staked.checked_sub(amount).ok_or(Error::<T>::InsufficientFunds)?;
+				user.staked.checked_sub(amount).ok_or_else(|| Error::<T>::InsufficientStaked)?;
 			info!("staked_new: {:?}", staked_new);
 
 			user.staked = staked_new;
 			info!("user updated: {:?}", user);
+			<AccountToUserInfo<T>>::insert(&from, user);
 
 			//Operation may result in account going out of existence
 			T::Currency::transfer(&Self::account_id(), &from, amt_bal, AllowDeath)
 				.map_err(|_| Error::<T>::TransferFailed)?;
 			info!("pallet_balance: {:?}", Self::pot());
 
-			<AccountToUserInfo<T>>::insert(&from, user);
+			let tok_bal = <Balances<T>>::get(&from);
+			let new_tok_bal =
+				tok_bal.checked_sub(amount).ok_or_else(|| Error::<T>::InsufficientTokens)?;
+			<Balances<T>>::insert(&from, new_tok_bal);
+
 			Self::deposit_event(Event::<T>::StakingReceived {
 				from,
 				amount,
@@ -291,11 +306,11 @@ pub mod pallet {
 			let user_count = match <UserCount<T>>::get() {
 				None => 1,
 				//return Err(Error::<T>::NoneValue.into()),
-				Some(old) => old.checked_add(1).ok_or(Error::<T>::StorageOverflow)?,
+				Some(old) => old.checked_add(1).ok_or_else(|| Error::<T>::UserCountOverflow)?,
 			};
 			<UserCount<T>>::put(user_count);
 			info!("user_count: {:?}", user_count);
-			let user = UserInfo { id: user_id, username: arr, staked: 0u32 };
+			let user = UserInfo { id: user_id, username: arr, staked: 0u64 };
 			<AccountToUserInfo<T>>::insert(&from, user);
 
 			Self::deposit_event(Event::UserAdded { user_index: user_id, user: from });
@@ -325,12 +340,13 @@ pub mod pallet {
 			let from_balance = <Balances<T>>::get(&from);
 			let to_balance = <Balances<T>>::get(&to);
 
-			let new_from_balance =
-				from_balance.checked_sub(amount).ok_or(Error::<T>::InsufficientFunds)?;
+			let new_from_balance = from_balance
+				.checked_sub(amount)
+				.ok_or_else(|| Error::<T>::InsufficientBalance)?;
 			//return Err(Error::<T>::NoneValue.into()),
 
 			let new_to_balance =
-				to_balance.checked_add(amount).ok_or(Error::<T>::BalanceOverflow)?;
+				to_balance.checked_add(amount).ok_or_else(|| Error::<T>::BalanceOverflow)?;
 
 			<Balances<T>>::insert(&from, new_from_balance);
 			<Balances<T>>::insert(&to, new_to_balance);
@@ -370,7 +386,7 @@ pub mod pallet {
 				None => return Err(Error::<T>::NoneValue.into()),
 				Some(old) => {
 					// Increment the value read from storage; will error in the event of overflow.
-					let new = old.checked_add(1).ok_or(Error::<T>::StorageOverflow)?;
+					let new = old.checked_add(1).ok_or_else(|| Error::<T>::UserCountOverflow)?;
 					// Update the value in storage with the incremented result.
 					<UserCount<T>>::put(new);
 					Ok(())
