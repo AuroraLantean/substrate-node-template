@@ -4,6 +4,7 @@
 /// Learn more about FRAME and the core library of Substrate FRAME pallets:
 /// <https://docs.substrate.io/reference/frame-pallets/>
 pub use pallet::*;
+use pallet_timestamp::{self as timestamp};
 
 #[cfg(test)]
 mod mock;
@@ -14,12 +15,7 @@ mod tests;
 #[cfg(feature = "runtime-benchmarks")]
 mod benchmarking;
 
-use frame_support::{
-	inherent::Vec,
-	pallet_prelude::*,
-	traits::{Currency, Imbalance, OnUnbalanced},
-	PalletId,
-}; //ReservableCurrency
+use frame_support::{traits::Currency, PalletId};
 
 /// To generate pallet controlled account.
 const PALLET_ID: PalletId = PalletId(*b"Staking!");
@@ -42,10 +38,12 @@ pub mod pallet {
 	use crate::BalanceOf;
 	use frame_support::{
 		dispatch::DispatchResult,
+		inherent::Vec,
+		pallet_prelude::*,
 		sp_runtime::traits::AccountIdConversion,
 		//sp_runtime::SaturatedConversion,
-		traits::{Currency, ExistenceRequirement::AllowDeath},
-	};
+		traits::{Currency, ExistenceRequirement::AllowDeath, Imbalance, OnUnbalanced},
+	}; //ReservableCurrency
 	use frame_system::pallet_prelude::*;
 	use log::info; //error, warn, //traits::Get, PalletId
 
@@ -57,7 +55,7 @@ pub mod pallet {
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
-	pub trait Config: frame_system::Config {
+	pub trait Config: frame_system::Config + timestamp::Config {
 		/// Because this pallet emits events, it depends on the runtime's definition of an event.
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 
@@ -76,6 +74,9 @@ pub mod pallet {
 		pub username: [u8; 20],
 		//BoundedVec<u8, T::StringMax>,
 		pub staked: u64,
+		pub staked_at: u64,
+		pub unstaked: u64,
+		pub reward: u64,
 	}
 
 	//#[pallet::unbounded]
@@ -94,6 +95,10 @@ pub mod pallet {
 	#[pallet::storage]
 	#[pallet::getter(fn totalsupply)]
 	pub type TotalSupply<T> = StorageValue<_, u64, ValueQuery>;
+
+	#[pallet::storage]
+	#[pallet::getter(fn rewardrate)]
+	pub type RewardRate<T> = StorageValue<_, u64, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn init)]
@@ -116,24 +121,63 @@ pub mod pallet {
 	pub enum Event<T: Config> {
 		/// Event documentation should end with an array that provides descriptive names for event
 		/// parameters. [usercount, who]
-		ResetUserCount { usercount: u32, who: T::AccountId },
+		ResetUserCount {
+			usercount: u32,
+			who: T::AccountId,
+		},
 		UserAdded {
 			user_index: u32, //from 1
 			user: T::AccountId,
 		}, //deposit: BalanceOf<T>
 		/// Tokens was initialized by user
-		Initialized { initializer: T::AccountId, amount: u64 },
+		Initialized {
+			initializer: T::AccountId,
+			amount: u64,
+		},
 		/// Tokens successfully transferred between users
-		TransferSucceeded { from: T::AccountId, to: T::AccountId, amount: u64 },
+		TransferSucceeded {
+			from: T::AccountId,
+			to: T::AccountId,
+			amount: u64,
+		},
 		/// Staking
-		StakingReceived { from: T::AccountId, amount: u64, pallet_balance: BalanceOf<T> },
+		Staking {
+			from: T::AccountId,
+			amount: u64,
+			pallet_balance: BalanceOf<T>,
+			timestamp: u64,
+		},
+		Unstake {
+			from: T::AccountId,
+			amount: u64,
+			timestamp: u64,
+			duration: u64,
+			reward_rate: u64,
+			reward: u64,
+		},
+		Withdraw {
+			from: T::AccountId,
+			amount: u64,
+			pallet_balance: BalanceOf<T>,
+		},
 		/// An imbalance from elsewhere in the runtime has been absorbed by the pallet
-		ImbalanceAbsorbed { from_balance: BalanceOf<T>, to_balance: BalanceOf<T> },
+		ImbalanceAbsorbed {
+			from_balance: BalanceOf<T>,
+			to_balance: BalanceOf<T>,
+		},
+		NowTime {
+			now: u64,
+		},
+		SetRewardRate {
+			reward_rate: u64,
+		},
 	}
 
 	// Errors inform users that usercount went wrong.
 	#[pallet::error]
 	pub enum Error<T> {
+		AmountZero,
+		RewardRateZero,
 		/// Error names should be descriptive.
 		NoneValue,
 		VecToArray,
@@ -152,6 +196,12 @@ pub mod pallet {
 		ConvertU64ToBalance,
 		InsufficientTokens,
 		TokenOverflow,
+		ConvertNowToU64,
+		ShouldStakeFirst,
+		MultiplyOverflow,
+		RewardOverflow,
+		InsufficientReward,
+    InsufficientUnstaked,
 	}
 
 	impl<T: Config> Pallet<T> {
@@ -188,13 +238,43 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		//------------------==
+		#[pallet::call_index(9)]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
+		pub fn set_reward_rate(origin: OriginFor<T>, reward_rate_new: u64) -> DispatchResult {
+			//T::ForceOrigin::ensure_origin(origin)?;
+			let caller = ensure_signed(origin)?;
+			info!("reward_rate_new: {:?}", reward_rate_new);
+
+			let reward_rate_old = <RewardRate<T>>::get();
+			info!("reward_rate_old: {:?}", reward_rate_old);
+			<RewardRate<T>>::put(reward_rate_new);
+
+			Self::deposit_event(Event::<T>::SetRewardRate { reward_rate: reward_rate_new });
+			Ok(())
+		}
+		//------------------==
+		#[pallet::call_index(8)]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
+		pub fn get_time(origin: OriginFor<T>) -> DispatchResult {
+			let _sender = ensure_signed(origin)?;
+			let now = <timestamp::Pallet<T>>::get();
+			let now_timestamp = now.try_into().map_err(|_| Error::<T>::ConvertNowToU64)?;
+			info!("now: {:?}, now_timestamp: {:?}", now, now_timestamp);
+
+			Self::deposit_event(Event::<T>::NowTime { now: now_timestamp });
+			Ok(())
+		}
+		//------------------==
 		#[pallet::call_index(5)]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
 		pub fn stake(origin: OriginFor<T>, amount: u64) -> DispatchResult {
+			ensure!(amount > 0, Error::<T>::AmountZero);
 			let from = ensure_signed(origin)?;
 			info!("from: {:?}, amount:{:?}", from, amount);
 			info!("pallet_balance: {:?}", Self::pot());
-
+			let now = <timestamp::Pallet<T>>::get();
+			let now_timestamp = now.try_into().map_err(|_| Error::<T>::ConvertNowToU64)?;
+			info!("now: {:?}, now_timestamp: {:?}", now, now_timestamp);
 			//let amt_bal: BalanceOf<T> = amount_u32.into();
 			let amt_bal: BalanceOf<T> =
 				amount.try_into().map_err(|_| Error::<T>::ConvertU64ToBalance)?;
@@ -216,6 +296,7 @@ pub mod pallet {
 			info!("staked_new: {:?}", staked_new);
 
 			user.staked = staked_new;
+			user.staked_at = now_timestamp;
 			info!("user updated: {:?}", user);
 			info!("pallet_balance: {:?}", Self::pot());
 
@@ -224,43 +305,39 @@ pub mod pallet {
 			let tok_bal = <Balances<T>>::get(&from);
 			let new_tok_bal =
 				tok_bal.checked_add(amount).ok_or_else(|| Error::<T>::TokenOverflow)?;
+			info!("old tok_bal: {:?}, new_tok_bal:{:?}", tok_bal, new_tok_bal);
 			<Balances<T>>::insert(&from, new_tok_bal);
 
-			Self::deposit_event(Event::<T>::StakingReceived {
+			Self::deposit_event(Event::<T>::Staking {
 				from,
 				amount,
 				pallet_balance: Self::pot(),
+				timestamp: now_timestamp,
 			});
 			Ok(())
 		}
-		#[pallet::call_index(6)]
-		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
-		pub fn unstake(_origin: OriginFor<T>) -> DispatchResult {
-			//T::ForceOrigin::ensure_origin(origin)?;
-			Ok(())
-		}
+		//------------------==
 		#[pallet::call_index(7)]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
 		pub fn withdraw(origin: OriginFor<T>, amount: u64) -> DispatchResult {
+			ensure!(amount > 0, Error::<T>::AmountZero);
+			//T::ForceOrigin::ensure_origin(origin)?;
 			let from = ensure_signed(origin)?;
 			info!("from: {:?}, amount:{:?}", from, amount);
 			info!("pallet_balance: {:?}", Self::pot());
 
-			let amt_bal: BalanceOf<T> =
-				amount.try_into().map_err(|_| Error::<T>::ConvertU64ToBalance)?;
+      let mut user =
+      <AccountToUserInfo<T>>::get(&from).ok_or_else(|| Error::<T>::UserDoesNotExist)?;
+      info!("user: {:?}", user);
 
-			let mut user =
-				<AccountToUserInfo<T>>::get(&from).ok_or_else(|| Error::<T>::UserDoesNotExist)?;
-			info!("user: {:?}", user);
-
-			let staked_new =
-				user.staked.checked_sub(amount).ok_or_else(|| Error::<T>::InsufficientStaked)?;
-			info!("staked_new: {:?}", staked_new);
-
-			user.staked = staked_new;
-			info!("user updated: {:?}", user);
+			let unstaked_new =
+				user.unstaked.checked_sub(amount).ok_or_else(|| Error::<T>::InsufficientUnstaked)?;
+			info!("unstaked_new: {:?}", unstaked_new);
+      user.unstaked = unstaked_new;
 			<AccountToUserInfo<T>>::insert(&from, user);
 
+			let amt_bal: BalanceOf<T> =
+				amount.try_into().map_err(|_| Error::<T>::ConvertU64ToBalance)?;
 			//Operation may result in account going out of existence
 			T::Currency::transfer(&Self::account_id(), &from, amt_bal, AllowDeath)
 				.map_err(|_| Error::<T>::TransferFailed)?;
@@ -269,12 +346,64 @@ pub mod pallet {
 			let tok_bal = <Balances<T>>::get(&from);
 			let new_tok_bal =
 				tok_bal.checked_sub(amount).ok_or_else(|| Error::<T>::InsufficientTokens)?;
+			info!("old tok_bal: {:?}, new_tok_bal:{:?}", tok_bal, new_tok_bal);
 			<Balances<T>>::insert(&from, new_tok_bal);
 
-			Self::deposit_event(Event::<T>::StakingReceived {
+			Self::deposit_event(Event::<T>::Withdraw { from, amount, pallet_balance: Self::pot() });
+			Ok(())
+		}
+		//------------------==
+		#[pallet::call_index(6)]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
+		pub fn unstake(origin: OriginFor<T>, amount: u64) -> DispatchResult {
+			ensure!(amount > 0, Error::<T>::AmountZero);
+			let from = ensure_signed(origin)?;
+			info!("from: {:?}, amount:{:?}", from, amount);
+			let now = <timestamp::Pallet<T>>::get();
+			let now_timestamp: u64 = now.try_into().map_err(|_| Error::<T>::ConvertNowToU64)?;
+			info!("now: {:?}, now_timestamp: {:?}", now, now_timestamp);
+
+			let mut user =
+				<AccountToUserInfo<T>>::get(&from).ok_or_else(|| Error::<T>::UserDoesNotExist)?;
+			info!("user: {:?}", user);
+
+			let duration = now_timestamp
+				.checked_sub(user.staked_at)
+				.ok_or_else(|| Error::<T>::ShouldStakeFirst)?;
+			info!("duration: {:?}", duration);
+
+			let reward_rate = <RewardRate<T>>::get();
+			info!("reward_rate: {:?}", reward_rate);
+			ensure!(reward_rate > 0, Error::<T>::RewardRateZero);
+			let yyy =
+				amount.checked_mul(reward_rate).ok_or_else(|| Error::<T>::MultiplyOverflow)?;
+			info!("amount * reward_rate: {:?}", yyy);
+			let zzz = yyy.checked_mul(duration).ok_or_else(|| Error::<T>::MultiplyOverflow)?;
+			info!("* duration: {:?}", zzz);
+			let reward = zzz.checked_div(1000000).ok_or_else(|| Error::<T>::MultiplyOverflow)?;
+			info!("reward: {:?}", reward);
+
+			let staked_new =
+				user.staked.checked_sub(amount).ok_or_else(|| Error::<T>::InsufficientStaked)?;
+			info!("staked_new: {:?}", staked_new);
+
+			let reward_new =
+				user.reward.checked_add(reward).ok_or_else(|| Error::<T>::RewardOverflow)?;
+			info!("reward_new: {:?}", reward_new);
+
+			user.staked = staked_new;
+      user.unstaked = amount;
+			user.reward = reward_new;
+			info!("user updated: {:?}", user);
+			<AccountToUserInfo<T>>::insert(&from, user);
+
+			Self::deposit_event(Event::<T>::Unstake {
 				from,
 				amount,
-				pallet_balance: Self::pot(),
+				timestamp: now_timestamp,
+				duration,
+				reward_rate,
+				reward,
 			});
 
 			Ok(())
@@ -310,7 +439,14 @@ pub mod pallet {
 			};
 			<UserCount<T>>::put(user_count);
 			info!("user_count: {:?}", user_count);
-			let user = UserInfo { id: user_id, username: arr, staked: 0u64 };
+			let user = UserInfo {
+				id: user_id,
+				username: arr,
+				staked: 0u64,
+				staked_at: 0u64,
+				unstaked: 0u64,
+				reward: 0u64,
+			};
 			<AccountToUserInfo<T>>::insert(&from, user);
 
 			Self::deposit_event(Event::UserAdded { user_index: user_id, user: from });
