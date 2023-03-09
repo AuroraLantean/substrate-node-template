@@ -9,7 +9,8 @@ use std::sync::Arc;
 
 use jsonrpsee::RpcModule;
 use node_template_runtime::{opaque::Block, AccountId, Balance, BlockNumber, Hash, Index};
-//use pallet_contracts::{Contracts, ContractsApi};
+//use sc_client_api::BlockBackend;
+//use sc_rpc::dev::{Dev, DevApiServer};
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
@@ -48,16 +49,17 @@ where
 	let FullDeps { client, pool, deny_unsafe } = deps;
 
 	module.merge(System::new(client.clone(), pool.clone(), deny_unsafe).into_rpc())?;
-	//module.merge(Contracts::new(client.clone()).into_rpc())?;
 
-	//module.merge(<dyn ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>>::default())?;
+	//https://github.com/paritytech/substrate/blob/master/bin/node/rpc/src/lib.rs
+
 	module.merge(TransactionPayment::new(client).into_rpc())?;
 
-	//module.merge(Contracts::new(client.clone()).into_rpc())?;)
 	// Extend this RPC with a custom API by using the following syntax.
 	// `YourRpcStruct` should have a reference to a client, which is needed
 	// to call into the runtime.
 	// `module.merge(YourRpcTrait::into_rpc(YourRpcStruct::new(ReferenceToClient, ...)))?;`
+  
+  //module.merge(Dev::new(client, deny_unsafe).into_rpc())?;
 
 	Ok(module)
 }

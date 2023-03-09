@@ -39,13 +39,13 @@ pub mod pallet {
 	use frame_support::{
 		dispatch::DispatchResult,
 		inherent::Vec,
+		log::{info, warn},
 		pallet_prelude::*,
 		sp_runtime::traits::AccountIdConversion,
 		//sp_runtime::SaturatedConversion,
 		traits::{Currency, ExistenceRequirement::AllowDeath, Imbalance, OnUnbalanced},
 	}; //ReservableCurrency
 	use frame_system::pallet_prelude::*;
-	use log::info; //error, warn, //traits::Get, PalletId
 
 	#[pallet::pallet]
 	//#[pallet::without_storage_info]
@@ -64,6 +64,9 @@ pub mod pallet {
 
 		/// The currency type this pallet deals with
 		type Currency: Currency<Self::AccountId>;
+
+		/// admin account
+		type ForceOrigin: EnsureOrigin<Self::RuntimeOrigin>;
 	}
 
 	#[derive(Default, Encode, Decode, Clone, MaxEncodedLen, PartialEq, RuntimeDebug, TypeInfo)]
@@ -81,16 +84,16 @@ pub mod pallet {
 
 	//#[pallet::unbounded]
 	#[pallet::storage]
-	#[pallet::getter(fn info)]
+	#[pallet::getter(fn userstakes)]
 	/// Info on all of the info.
-	pub type AccountToUserInfo<T: Config> =
+	pub type UserStakes<T: Config> =
 		StorageMap<_, Blake2_128Concat, T::AccountId, UserInfo, OptionQuery>; //<T>
 
 	// The pallet's runtime storage items.
 	// https://docs.substrate.io/main-docs/build/runtime-storage/
 	#[pallet::storage]
-	#[pallet::getter(fn usercount)]
-	pub type UserCount<T> = StorageValue<_, u32>;
+	#[pallet::getter(fn usercount)] //(super)...Self::some_value()
+	pub type UserCount<T> = StorageValue<_, u32>; //OptionQuery
 
 	#[pallet::storage]
 	#[pallet::getter(fn totalsupply)]
@@ -201,7 +204,7 @@ pub mod pallet {
 		MultiplyOverflow,
 		RewardOverflow,
 		InsufficientReward,
-    InsufficientUnstaked,
+		InsufficientUnstaked,
 	}
 
 	impl<T: Config> Pallet<T> {
@@ -241,8 +244,8 @@ pub mod pallet {
 		#[pallet::call_index(9)]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
 		pub fn set_reward_rate(origin: OriginFor<T>, reward_rate_new: u64) -> DispatchResult {
-			//T::ForceOrigin::ensure_origin(origin)?;
-			let caller = ensure_signed(origin)?;
+			T::ForceOrigin::ensure_origin(origin)?;
+			//let caller = ensure_signed(origin)?;
 			info!("reward_rate_new: {:?}", reward_rate_new);
 
 			let reward_rate_old = <RewardRate<T>>::get();
@@ -259,8 +262,8 @@ pub mod pallet {
 			let _sender = ensure_signed(origin)?;
 			let now = <timestamp::Pallet<T>>::get();
 			let now_timestamp = now.try_into().map_err(|_| Error::<T>::ConvertNowToU64)?;
-			info!("now: {:?}, now_timestamp: {:?}", now, now_timestamp);
-
+			info!("info now_timestamp: {:?}", now_timestamp);
+			warn!("warn now_timestamp: {:?}", now_timestamp);
 			Self::deposit_event(Event::<T>::NowTime { now: now_timestamp });
 			Ok(())
 		}
@@ -288,7 +291,7 @@ pub mod pallet {
 			//debug_assert!(err_amount.is_zero());
 
 			let mut user =
-				<AccountToUserInfo<T>>::get(&from).ok_or_else(|| Error::<T>::UserDoesNotExist)?;
+				<UserStakes<T>>::get(&from).ok_or_else(|| Error::<T>::UserDoesNotExist)?;
 			info!("user: {:?}", user);
 
 			let staked_new =
@@ -300,7 +303,7 @@ pub mod pallet {
 			info!("user updated: {:?}", user);
 			info!("pallet_balance: {:?}", Self::pot());
 
-			<AccountToUserInfo<T>>::insert(&from, user);
+			<UserStakes<T>>::insert(&from, user);
 
 			let tok_bal = <Balances<T>>::get(&from);
 			let new_tok_bal =
@@ -326,15 +329,18 @@ pub mod pallet {
 			info!("from: {:?}, amount:{:?}", from, amount);
 			info!("pallet_balance: {:?}", Self::pot());
 
-      let mut user =
-      <AccountToUserInfo<T>>::get(&from).ok_or_else(|| Error::<T>::UserDoesNotExist)?;
-      info!("user: {:?}", user);
+			let mut user =
+				<UserStakes<T>>::get(&from).ok_or_else(|| Error::<T>::UserDoesNotExist)?;
+			info!("user: {:?}", user);
 
-			let unstaked_new =
-				user.unstaked.checked_sub(amount).ok_or_else(|| Error::<T>::InsufficientUnstaked)?;
+			let unstaked_new = user
+				.unstaked
+				.checked_sub(amount)
+				.ok_or_else(|| Error::<T>::InsufficientUnstaked)?;
 			info!("unstaked_new: {:?}", unstaked_new);
-      user.unstaked = unstaked_new;
-			<AccountToUserInfo<T>>::insert(&from, user);
+			user.unstaked = unstaked_new;
+			info!("user: {:?}", user);
+			<UserStakes<T>>::insert(&from, user);
 
 			let amt_bal: BalanceOf<T> =
 				amount.try_into().map_err(|_| Error::<T>::ConvertU64ToBalance)?;
@@ -364,7 +370,7 @@ pub mod pallet {
 			info!("now: {:?}, now_timestamp: {:?}", now, now_timestamp);
 
 			let mut user =
-				<AccountToUserInfo<T>>::get(&from).ok_or_else(|| Error::<T>::UserDoesNotExist)?;
+				<UserStakes<T>>::get(&from).ok_or_else(|| Error::<T>::UserDoesNotExist)?;
 			info!("user: {:?}", user);
 
 			let duration = now_timestamp
@@ -392,10 +398,10 @@ pub mod pallet {
 			info!("reward_new: {:?}", reward_new);
 
 			user.staked = staked_new;
-      user.unstaked = amount;
+			user.unstaked = amount;
 			user.reward = reward_new;
 			info!("user updated: {:?}", user);
-			<AccountToUserInfo<T>>::insert(&from, user);
+			<UserStakes<T>>::insert(&from, user);
 
 			Self::deposit_event(Event::<T>::Unstake {
 				from,
@@ -447,7 +453,7 @@ pub mod pallet {
 				unstaked: 0u64,
 				reward: 0u64,
 			};
-			<AccountToUserInfo<T>>::insert(&from, user);
+			<UserStakes<T>>::insert(&from, user);
 
 			Self::deposit_event(Event::UserAdded { user_index: user_id, user: from });
 			Ok(())
@@ -499,6 +505,8 @@ pub mod pallet {
 			// This function will return an error if the extrinsic is not signed.
 			// https://docs.substrate.io/main-docs/build/origins/
 			let who = ensure_signed(origin)?;
+			info!("info usercount: {:?}", usercount);
+			warn!("warn usercount: {:?}", usercount);
 
 			// Update storage.
 			<UserCount<T>>::put(usercount);

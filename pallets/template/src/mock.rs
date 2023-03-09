@@ -55,6 +55,7 @@ impl pallet_template::Config for Test {
 	type RuntimeEvent = RuntimeEvent;
 	type StringMax = ConstU8<20>;
 	type Currency = Balances;
+	type ForceOrigin = frame_system::EnsureRoot<u64>;
 }
 
 /// Existential deposit.
@@ -86,5 +87,6 @@ impl pallet_timestamp::Config for Test {
 
 // Build genesis storage according to the mock runtime.
 pub fn new_test_ext() -> sp_io::TestExternalities {
+	sp_tracing::try_init_simple();
 	system::GenesisConfig::default().build_storage::<Test>().unwrap().into()
 }
