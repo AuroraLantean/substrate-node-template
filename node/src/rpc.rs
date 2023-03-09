@@ -8,9 +8,9 @@
 use std::sync::Arc;
 
 use jsonrpsee::RpcModule;
-use node_template_runtime::{opaque::Block, AccountId, Balance, BlockNumber, Hash, Index};
-//use sc_client_api::BlockBackend;
-//use sc_rpc::dev::{Dev, DevApiServer};
+use node_template_runtime::{opaque::Block, AccountId, Balance, Index};
+use sc_client_api::BlockBackend;
+use sc_rpc::dev::{Dev, DevApiServer};
 use sc_transaction_pool_api::TransactionPool;
 use sp_api::ProvideRuntimeApi;
 use sp_block_builder::BlockBuilder;
@@ -34,11 +34,11 @@ pub fn create_full<C, P>(
 ) -> Result<RpcModule<()>, Box<dyn std::error::Error + Send + Sync>>
 where
 	C: ProvideRuntimeApi<Block>,
+	C: BlockBackend<Block>,
 	C: HeaderBackend<Block> + HeaderMetadata<Block, Error = BlockChainError> + 'static,
 	C: Send + Sync + 'static,
 	C::Api: substrate_frame_rpc_system::AccountNonceApi<Block, AccountId, Index>,
 	C::Api: pallet_transaction_payment_rpc::TransactionPaymentRuntimeApi<Block, Balance>,
-	C::Api: pallet_contracts::ContractsApi<Block, AccountId, Balance, BlockNumber, Hash>,
 	C::Api: BlockBuilder<Block>,
 	P: TransactionPool + 'static,
 {
@@ -52,14 +52,15 @@ where
 
 	//https://github.com/paritytech/substrate/blob/master/bin/node/rpc/src/lib.rs
 
-	module.merge(TransactionPayment::new(client).into_rpc())?;
+	module.merge(TransactionPayment::new(client.clone()).into_rpc())?;
 
 	// Extend this RPC with a custom API by using the following syntax.
 	// `YourRpcStruct` should have a reference to a client, which is needed
 	// to call into the runtime.
 	// `module.merge(YourRpcTrait::into_rpc(YourRpcStruct::new(ReferenceToClient, ...)))?;`
-  
-  //module.merge(Dev::new(client, deny_unsafe).into_rpc())?;
+
+	// Dev RPC API extension
+	module.merge(Dev::new(client, deny_unsafe).into_rpc())?;
 
 	Ok(module)
 }

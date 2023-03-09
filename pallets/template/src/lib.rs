@@ -380,6 +380,7 @@ pub mod pallet {
 
 			let reward_rate = <RewardRate<T>>::get();
 			info!("reward_rate: {:?}", reward_rate);
+      info!("Did you set reward to none zero?");
 			ensure!(reward_rate > 0, Error::<T>::RewardRateZero);
 			let yyy =
 				amount.checked_mul(reward_rate).ok_or_else(|| Error::<T>::MultiplyOverflow)?;
