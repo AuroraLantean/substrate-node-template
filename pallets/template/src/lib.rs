@@ -5,6 +5,7 @@
 /// <https://docs.substrate.io/reference/frame-pallets/>
 pub use pallet::*;
 use pallet_timestamp::{self as timestamp};
+use sp_std::collections::btree_set::BTreeSet;
 
 #[cfg(test)]
 mod mock;
@@ -24,6 +25,9 @@ const PALLET_ID: PalletId = PalletId(*b"Staking!");
 
 type BalanceOf<T> =
 	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
+type PositiveImbalanceOf<T> = <<T as Config>::Currency as Currency<
+	<T as frame_system::Config>::AccountId,
+>>::PositiveImbalance;
 type NegativeImbalanceOf<T> = <<T as Config>::Currency as Currency<
 	<T as frame_system::Config>::AccountId,
 >>::NegativeImbalance;
@@ -34,7 +38,7 @@ type AccountIdLookupOf<T> = <<T as frame_system::Config>::Lookup as StaticLookup
 */
 #[frame_support::pallet]
 pub mod pallet {
-	use super::*;
+  use super::*;
 	use crate::BalanceOf;
 	use frame_support::{
 		dispatch::DispatchResult,
@@ -43,9 +47,13 @@ pub mod pallet {
 		pallet_prelude::*,
 		sp_runtime::traits::AccountIdConversion,
 		//sp_runtime::SaturatedConversion,
-		traits::{Currency, ExistenceRequirement::AllowDeath, Imbalance, OnUnbalanced},
+		traits::{Currency, ExistenceRequirement::AllowDeath, Imbalance, OnUnbalanced, ReservableCurrency},
 	}; //ReservableCurrency
 	use frame_system::pallet_prelude::*;
+  use sp_std::prelude::*;
+
+	/// A maximum number of members. When membership reaches this number, no new members may join.
+	pub const MAX_MEMBERS: usize = 16;
 
 	#[pallet::pallet]
 	//#[pallet::without_storage_info]
@@ -61,12 +69,13 @@ pub mod pallet {
 
 		#[pallet::constant]
 		type StringMax: Get<u8>;
-
 		/// The currency type this pallet deals with
 		type Currency: Currency<Self::AccountId>;
-
+    //type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 		/// admin account
 		type ForceOrigin: EnsureOrigin<Self::RuntimeOrigin>;
+    /// Max size for vector
+    type MaxSize: Get<u32>;
 	}
 
 	#[derive(Default, Encode, Decode, Clone, MaxEncodedLen, PartialEq, RuntimeDebug, TypeInfo)]
@@ -111,6 +120,10 @@ pub mod pallet {
 	#[pallet::getter(fn balances)]
 	pub(super) type Balances<T: Config> =
 		StorageMap<_, Blake2_128Concat, T::AccountId, u64, ValueQuery>;
+
+  #[pallet::storage]
+  #[pallet::getter(fn members)]
+  pub(super) type Members<T: Config> = StorageValue<_, BoundedVec<T::AccountId, T::MaxSize>, ValueQuery>;
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
@@ -174,6 +187,11 @@ pub mod pallet {
 		SetRewardRate {
 			reward_rate: u64,
 		},
+		/// Added a member
+		MemberAdded{who: T::AccountId},
+		AlreadyMember{},
+		/// Removed a member
+		MemberRemoved{who: T::AccountId},
 	}
 
 	// Errors inform users that usercount went wrong.
@@ -181,17 +199,14 @@ pub mod pallet {
 	pub enum Error<T> {
 		AmountZero,
 		RewardRateZero,
-		/// Error names should be descriptive.
 		NoneValue,
 		VecToArray,
 		StringTooShort,
 		StringTooLong,
-		/// Attempted to initialize the token after it had already been initialized.
 		AlreadyInitialized,
 		UserCountOverflow,
 		StakedOverflow,
 		InsufficientStaked,
-		/// Attempted to transfer more funds than there are available
 		InsufficientBalance,
 		BalanceOverflow,
 		TransferFailed,
@@ -205,6 +220,9 @@ pub mod pallet {
 		RewardOverflow,
 		InsufficientReward,
 		InsufficientUnstaked,
+		AlreadyMember,
+		NotMember, InsertNewMember,
+		MembershipLimitReached,
 	}
 
 	impl<T: Config> Pallet<T> {
@@ -240,6 +258,46 @@ pub mod pallet {
 	// Dispatchable functions must be annotated with a weight and must return a DispatchResult.
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
+		//------------------==
+		#[pallet::call_index(10)]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
+		pub fn add_member(origin: OriginFor<T>) -> DispatchResult {
+			let new_member = ensure_signed(origin)?;
+      let mut members = Members::<T>::get();
+			ensure!(
+				members.len() < T::MaxSize::get() as usize,
+				Error::<T>::MembershipLimitReached
+			);
+      match members.binary_search(&new_member) {
+        Ok(_) => Ok(()),
+          //Self::deposit_event(Event::AlreadyMember{});
+        Err(index) => {
+            let _out = members.try_insert(index, new_member.clone()).map_err(|_| Error::<T>::InsertNewMember);
+            Members::<T>::put(members);
+            Self::deposit_event(Event::MemberAdded{ who: new_member});
+            Ok(())
+        }
+      }
+    }
+		//------------------==
+		#[pallet::call_index(11)]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
+		pub fn remove_member(origin: OriginFor<T>) -> DispatchResult {
+			let old_member = ensure_signed(origin)?;
+			let mut members = Members::<T>::get();
+
+			match members.binary_search(&old_member) {
+				Ok(index) => {
+					members.remove(index);
+					Members::<T>::put(members);
+					Self::deposit_event(Event::MemberRemoved{who: old_member});
+					Ok(())
+				}
+				Err(_) => Ok(()),
+        //Error::<T>::NotMember),
+			}
+		// also see `append_or_insert`, `append_or_put` in pallet-elections/phragmen, democracy
+    }
 		//------------------==
 		#[pallet::call_index(9)]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
@@ -441,7 +499,7 @@ pub mod pallet {
 
 			let user_count = match <UserCount<T>>::get() {
 				None => 1,
-				//return Err(Error::<T>::NoneValue.into()),
+				//return Err(Error::<T>::NoneValue),
 				Some(old) => old.checked_add(1).ok_or_else(|| Error::<T>::UserCountOverflow)?,
 			};
 			<UserCount<T>>::put(user_count);

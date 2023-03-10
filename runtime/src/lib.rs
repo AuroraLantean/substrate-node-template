@@ -141,7 +141,7 @@ pub const CENTS: Balance = 1_000 * MILLICENTS;
 const fn deposit(items: u32, bytes: u32) -> Balance {
 	items as Balance * 15 * CENTS + (bytes as Balance) * 6 * CENTS
 }
-const AVERAGE_ON_INITIAL_RATIO: Perbill = Perbill::from_percent(10);
+//const AVERAGE_ON_INITIAL_RATIO: Perbill = Perbill::from_percent(10);
 
 /// The version information used to identify this runtime when compiled natively.
 #[cfg(feature = "std")]
@@ -381,6 +381,7 @@ impl pallet_template::Config for Runtime {
 	type StringMax = ConstU8<20>;
 	type Currency = Balances;
 	type ForceOrigin = frame_system::EnsureRoot<AccountId>;
+  type MaxSize = ConstU32<16>;
 }
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
