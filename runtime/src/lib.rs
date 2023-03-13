@@ -54,6 +54,7 @@ pub use sp_runtime::{Perbill, Permill};
 
 /// Import the template pallet.
 pub use pallet_template;
+pub use check_membership;
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -383,6 +384,9 @@ impl pallet_template::Config for Runtime {
 	type ForceOrigin = frame_system::EnsureRoot<AccountId>;
   type MaxSize = ConstU32<16>;
 }
+impl check_membership::tight::Config for Runtime {
+	type RuntimeEvent = RuntimeEvent;
+}
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
@@ -403,6 +407,7 @@ construct_runtime!(
 		// Include the custom logic from the pallet-template in the runtime.
 		DaModule: pallet_template,
 		Contracts: pallet_contracts,
+    CheckMembership: check_membership::tight,
 	}
 );
 

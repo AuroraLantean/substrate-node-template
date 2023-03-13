@@ -5,7 +5,7 @@
 /// <https://docs.substrate.io/reference/frame-pallets/>
 pub use pallet::*;
 use pallet_timestamp::{self as timestamp};
-use sp_std::collections::btree_set::BTreeSet;
+//use sp_std::collections::btree_set::BTreeSet;
 
 #[cfg(test)]
 mod mock;
@@ -269,8 +269,7 @@ pub mod pallet {
 				Error::<T>::MembershipLimitReached
 			);
       match members.binary_search(&new_member) {
-        Ok(_) => Ok(()),
-          //Self::deposit_event(Event::AlreadyMember{});
+        Ok(_) => Err(Error::<T>::AlreadyMember.into()),
         Err(index) => {
             let _out = members.try_insert(index, new_member.clone()).map_err(|_| Error::<T>::InsertNewMember);
             Members::<T>::put(members);
@@ -292,9 +291,8 @@ pub mod pallet {
 					Members::<T>::put(members);
 					Self::deposit_event(Event::MemberRemoved{who: old_member});
 					Ok(())
-				}
-				Err(_) => Ok(()),
-        //Error::<T>::NotMember),
+				},
+				Err(_) => Err(Error::<T>::NotMember.into()),
 			}
 		// also see `append_or_insert`, `append_or_put` in pallet-elections/phragmen, democracy
     }
