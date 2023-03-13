@@ -102,7 +102,7 @@ pub mod pallet {
 	// https://docs.substrate.io/main-docs/build/runtime-storage/
 	#[pallet::storage]
 	#[pallet::getter(fn usercount)] //(super)...Self::some_value()
-	pub type UserCount<T> = StorageValue<_, u32>; //OptionQuery
+	pub type UserCount<T> = StorageValue<_, u32, OptionQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn totalsupply)]
@@ -181,17 +181,13 @@ pub mod pallet {
 			from_balance: BalanceOf<T>,
 			to_balance: BalanceOf<T>,
 		},
-		NowTime {
-			now: u64,
-		},
-		SetRewardRate {
-			reward_rate: u64,
-		},
+		NowTime(u64),
+		SetRewardRate(u64),
 		/// Added a member
-		MemberAdded{who: T::AccountId},
+		MemberAdded(T::AccountId),
 		AlreadyMember{},
 		/// Removed a member
-		MemberRemoved{who: T::AccountId},
+		MemberRemoved(T::AccountId),
 	}
 
 	// Errors inform users that usercount went wrong.
@@ -273,7 +269,7 @@ pub mod pallet {
         Err(index) => {
             let _out = members.try_insert(index, new_member.clone()).map_err(|_| Error::<T>::InsertNewMember);
             Members::<T>::put(members);
-            Self::deposit_event(Event::MemberAdded{ who: new_member});
+            Self::deposit_event(Event::MemberAdded(new_member));
             Ok(())
         }
       }
@@ -289,7 +285,7 @@ pub mod pallet {
 				Ok(index) => {
 					members.remove(index);
 					Members::<T>::put(members);
-					Self::deposit_event(Event::MemberRemoved{who: old_member});
+					Self::deposit_event(Event::MemberRemoved(old_member));
 					Ok(())
 				},
 				Err(_) => Err(Error::<T>::NotMember.into()),
@@ -308,7 +304,7 @@ pub mod pallet {
 			info!("reward_rate_old: {:?}", reward_rate_old);
 			<RewardRate<T>>::put(reward_rate_new);
 
-			Self::deposit_event(Event::<T>::SetRewardRate { reward_rate: reward_rate_new });
+			Self::deposit_event(Event::SetRewardRate(reward_rate_new));
 			Ok(())
 		}
 		//------------------==
@@ -320,7 +316,7 @@ pub mod pallet {
 			let now_timestamp = now.try_into().map_err(|_| Error::<T>::ConvertNowToU64)?;
 			info!("info now_timestamp: {:?}", now_timestamp);
 			warn!("warn now_timestamp: {:?}", now_timestamp);
-			Self::deposit_event(Event::<T>::NowTime { now: now_timestamp });
+			Self::deposit_event(Event::<T>::NowTime(now_timestamp));
 			Ok(())
 		}
 		//------------------==
