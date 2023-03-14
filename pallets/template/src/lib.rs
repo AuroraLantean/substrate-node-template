@@ -76,7 +76,7 @@ pub mod pallet {
 		type MaxSize: Get<u32>;
 	}
 
-	#[derive(Encode, Decode, Clone, MaxEncodedLen, PartialEq, RuntimeDebug, TypeInfo)] //Default
+	#[derive(Encode, Decode, Clone, MaxEncodedLen, PartialEq, RuntimeDebug, TypeInfo)] //Default, Eq
 	#[scale_info(skip_type_params(T))]
 	pub struct PostComment<T: Config> {
 		pub content: BoundedVec<u8, T::MaxSize>,
@@ -240,7 +240,6 @@ pub mod pallet {
 		pub fn account_id() -> T::AccountId {
 			PALLET_ID.into_account_truncating()
 			//T::PalletId::get().into_account_truncating()
-			//sp_runtime::traits::AccountIdConversion::into_account_truncating(&PALLET_ID)
 		}
 
 		/// The pallet balance
