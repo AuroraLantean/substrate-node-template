@@ -7,9 +7,7 @@
 include!(concat!(env!("OUT_DIR"), "/wasm_binary.rs"));
 
 use frame_support::dispatch::DispatchClass;
-use frame_system::{
-	limits::{BlockLength, BlockWeights},
-};
+use frame_system::limits::{BlockLength, BlockWeights};
 use pallet_grandpa::{
 	fg_primitives, AuthorityId as GrandpaId, AuthorityList as GrandpaAuthorityList,
 };
@@ -52,9 +50,9 @@ use pallet_transaction_payment::{ConstFeeMultiplier, CurrencyAdapter, Multiplier
 pub use sp_runtime::BuildStorage;
 pub use sp_runtime::{Perbill, Permill};
 
+pub use check_membership;
 /// Import the template pallet.
 pub use pallet_template;
-pub use check_membership;
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -382,7 +380,7 @@ impl pallet_template::Config for Runtime {
 	type StringMax = ConstU8<20>;
 	type Currency = Balances;
 	type ForceOrigin = frame_system::EnsureRoot<AccountId>;
-  type MaxSize = ConstU32<16>;
+	type MaxSize = ConstU32<16>;
 }
 impl check_membership::tight::Config for Runtime {
 	type RuntimeEvent = RuntimeEvent;
@@ -407,7 +405,7 @@ construct_runtime!(
 		// Include the custom logic from the pallet-template in the runtime.
 		DaModule: pallet_template,
 		Contracts: pallet_contracts,
-    CheckMembership: check_membership::tight,
+		CheckMembership: check_membership::tight,
 	}
 );
 

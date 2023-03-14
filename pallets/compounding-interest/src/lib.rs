@@ -7,6 +7,7 @@
 //!
 //! The continuous account accrues interest continuously and is implemented using
 //! Substrate-fixed's `I32F32` implementation of fixed point.
+//https://github.com/encointer/substrate-fixed
 
 use sp_arithmetic::Percent;
 use sp_std::convert::TryInto;
@@ -66,7 +67,7 @@ pub mod pallet {
 
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
-  pub struct Pallet<T>(_);
+	pub struct Pallet<T>(_);
 	//pub struct Pallet<T>(PhantomData<T>);
 
 	#[pallet::hooks]
@@ -96,9 +97,9 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		/// Deposit some funds into the compounding interest account
-    //------------------==
-    #[pallet::call_index(0)]
-    #[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
+		//------------------==
+		#[pallet::call_index(0)]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
 		pub fn deposit_continuous(origin: OriginFor<T>, val_to_add: u64) -> DispatchResult {
 			ensure_signed(origin)?;
 
@@ -117,13 +118,10 @@ pub mod pallet {
 		}
 
 		/// Withdraw some funds from the compounding interest account
-    //------------------==
-    #[pallet::call_index(1)]
-    #[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
-    pub fn withdraw_continuous(
-			origin: OriginFor<T>,
-			val_to_take: u64,
-		) -> DispatchResult {
+		//------------------==
+		#[pallet::call_index(1)]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
+		pub fn withdraw_continuous(origin: OriginFor<T>, val_to_take: u64) -> DispatchResult {
 			ensure_signed(origin)?;
 
 			let current_block = frame_system::Pallet::<T>::block_number();
@@ -141,13 +139,10 @@ pub mod pallet {
 		}
 
 		/// Deposit some funds into the discrete interest account
-    //------------------==
-    #[pallet::call_index(2)]
-    #[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
-		pub fn deposit_discrete(
-			origin: OriginFor<T>,
-			val_to_add: u64,
-		) -> DispatchResult {
+		//------------------==
+		#[pallet::call_index(2)]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
+		pub fn deposit_discrete(origin: OriginFor<T>, val_to_add: u64) -> DispatchResult {
 			ensure_signed(origin)?;
 
 			let old_value = DiscreteAccount::<T>::get();
@@ -161,13 +156,10 @@ pub mod pallet {
 		}
 
 		/// Withdraw some funds from the discrete interest account
-    //------------------==
-    #[pallet::call_index(3)]
-    #[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
-		pub fn withdraw_discrete(
-			origin: OriginFor<T>,
-			val_to_take: u64,
-		) -> DispatchResult {
+		//------------------==
+		#[pallet::call_index(3)]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
+		pub fn withdraw_discrete(origin: OriginFor<T>, val_to_take: u64) -> DispatchResult {
 			ensure_signed(origin)?;
 
 			let old_value = DiscreteAccount::<T>::get();
@@ -187,10 +179,7 @@ impl<T: Config> Pallet<T> {
 	/// account
 	fn value_of_continuous_account(now: &<T as frame_system::Config>::BlockNumber) -> I32F32 {
 		// Get the old state of the accout
-		let ContinuousAccountData {
-			principal,
-			deposit_date,
-		} = ContinuousAccount::<T>::get();
+		let ContinuousAccountData { principal, deposit_date } = ContinuousAccount::<T>::get();
 
 		// Calculate the exponential function (lots of type conversion)
 		let elapsed_time_block_number = *now - deposit_date;

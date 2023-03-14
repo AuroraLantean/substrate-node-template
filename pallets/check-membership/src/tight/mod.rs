@@ -28,7 +28,7 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		/// The caller is a member.
-		IsAMember{who: T::AccountId},
+		IsAMember { who: T::AccountId },
 	}
 
 	#[pallet::error]
@@ -39,7 +39,7 @@ pub mod pallet {
 
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
-  pub struct Pallet<T>(_);
+	pub struct Pallet<T>(_);
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {}
@@ -54,11 +54,9 @@ pub mod pallet {
 			let members = pallet_template::Pallet::<T>::members();
 
 			// Check whether the caller is a member
-			members
-				.binary_search(&caller)
-				.map_err(|_| Error::<T>::NotAMember)?;
+			members.binary_search(&caller).map_err(|_| Error::<T>::NotAMember)?;
 
-			Self::deposit_event(Event::IsAMember{who: caller});
+			Self::deposit_event(Event::IsAMember { who: caller });
 			Ok(())
 		}
 	}

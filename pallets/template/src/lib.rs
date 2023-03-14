@@ -25,7 +25,7 @@ const PALLET_ID: PalletId = PalletId(*b"Staking!");
 
 type BalanceOf<T> =
 	<<T as Config>::Currency as Currency<<T as frame_system::Config>::AccountId>>::Balance;
-type PositiveImbalanceOf<T> = <<T as Config>::Currency as Currency<
+type _PositiveImbalanceOf<T> = <<T as Config>::Currency as Currency<
 	<T as frame_system::Config>::AccountId,
 >>::PositiveImbalance;
 type NegativeImbalanceOf<T> = <<T as Config>::Currency as Currency<
@@ -38,8 +38,7 @@ type AccountIdLookupOf<T> = <<T as frame_system::Config>::Lookup as StaticLookup
 */
 #[frame_support::pallet]
 pub mod pallet {
-  use super::*;
-	use crate::BalanceOf;
+	use super::*;
 	use frame_support::{
 		dispatch::DispatchResult,
 		inherent::Vec,
@@ -47,16 +46,15 @@ pub mod pallet {
 		pallet_prelude::*,
 		sp_runtime::traits::AccountIdConversion,
 		//sp_runtime::SaturatedConversion,
-		traits::{Currency, ExistenceRequirement::AllowDeath, Imbalance, OnUnbalanced, ReservableCurrency},
-	}; //ReservableCurrency
+		traits::{Currency, ExistenceRequirement::AllowDeath, Hash, Imbalance, OnUnbalanced},
+	};
 	use frame_system::pallet_prelude::*;
-  use sp_std::prelude::*;
+	use sp_std::prelude::*;
 
 	/// A maximum number of members. When membership reaches this number, no new members may join.
 	pub const MAX_MEMBERS: usize = 16;
 
 	#[pallet::pallet]
-	//#[pallet::without_storage_info]
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
 	//pub struct Pallet<T, I = ()>(_);
@@ -71,12 +69,27 @@ pub mod pallet {
 		type StringMax: Get<u8>;
 		/// The currency type this pallet deals with
 		type Currency: Currency<Self::AccountId>;
-    //type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
+
 		/// admin account
 		type ForceOrigin: EnsureOrigin<Self::RuntimeOrigin>;
-    /// Max size for vector
-    type MaxSize: Get<u32>;
+		/// Max size for vector
+		type MaxSize: Get<u32>;
 	}
+
+	#[derive(Encode, Decode, Clone, MaxEncodedLen, PartialEq, RuntimeDebug, TypeInfo)] //Default
+	#[scale_info(skip_type_params(T))]
+	pub struct PostComment<T: Config> {
+		pub content: BoundedVec<u8, T::MaxSize>,
+		pub post_id: T::Hash,
+		pub who: T::AccountId,
+		pub hash: Hash,
+		pub balance: BalanceOf<T>,
+		pub block_number: BlockNumberFor<T>,
+	} //<T as frame_system::Config>
+	#[pallet::storage]
+	#[pallet::getter(fn blog_post_comments)]
+	pub(super) type PostComments<T: Config> =
+		StorageMap<_, Twox64Concat, T::Hash, BoundedVec<PostComment<T>, T::MaxSize>>;
 
 	#[derive(Default, Encode, Decode, Clone, MaxEncodedLen, PartialEq, RuntimeDebug, TypeInfo)]
 	//#[scale_info(skip_type_params(T))]
@@ -114,16 +127,17 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn init)]
-	pub type Init<T: Config> = StorageValue<_, bool, ValueQuery>;
+	pub type IsInitial<T: Config> = StorageValue<_, bool, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn balances)]
 	pub(super) type Balances<T: Config> =
 		StorageMap<_, Blake2_128Concat, T::AccountId, u64, ValueQuery>;
 
-  #[pallet::storage]
-  #[pallet::getter(fn members)]
-  pub(super) type Members<T: Config> = StorageValue<_, BoundedVec<T::AccountId, T::MaxSize>, ValueQuery>;
+	#[pallet::storage]
+	#[pallet::getter(fn members)]
+	pub(super) type Members<T: Config> =
+		StorageValue<_, BoundedVec<T::AccountId, T::MaxSize>, ValueQuery>;
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
@@ -136,7 +150,6 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		/// Event documentation should end with an array that provides descriptive names for event
-		/// parameters. [usercount, who]
 		ResetUserCount {
 			usercount: u32,
 			who: T::AccountId,
@@ -144,7 +157,7 @@ pub mod pallet {
 		UserAdded {
 			user_index: u32, //from 1
 			user: T::AccountId,
-		}, //deposit: BalanceOf<T>
+		}, //deposit: BalanceOf<T>, T::BlockNumber
 		/// Tokens was initialized by user
 		Initialized {
 			initializer: T::AccountId,
@@ -181,11 +194,11 @@ pub mod pallet {
 			from_balance: BalanceOf<T>,
 			to_balance: BalanceOf<T>,
 		},
-		NowTime(u64),
+		NowTime(u64, T::BlockNumber),
 		SetRewardRate(u64),
 		/// Added a member
 		MemberAdded(T::AccountId),
-		AlreadyMember{},
+		AlreadyMember {},
 		/// Removed a member
 		MemberRemoved(T::AccountId),
 	}
@@ -199,7 +212,7 @@ pub mod pallet {
 		VecToArray,
 		StringTooShort,
 		StringTooLong,
-		AlreadyInitialized,
+		InitializedBf,
 		UserCountOverflow,
 		StakedOverflow,
 		InsufficientStaked,
@@ -217,7 +230,8 @@ pub mod pallet {
 		InsufficientReward,
 		InsufficientUnstaked,
 		AlreadyMember,
-		NotMember, InsertNewMember,
+		NotMember,
+		InsertNewMember,
 		MembershipLimitReached,
 	}
 
@@ -257,27 +271,26 @@ pub mod pallet {
 		//------------------==
 		#[pallet::call_index(10)]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
-		pub fn add_member(origin: OriginFor<T>) -> DispatchResult {
+		pub fn add_member_into_vec(origin: OriginFor<T>) -> DispatchResult {
 			let new_member = ensure_signed(origin)?;
-      let mut members = Members::<T>::get();
-			ensure!(
-				members.len() < T::MaxSize::get() as usize,
-				Error::<T>::MembershipLimitReached
-			);
-      match members.binary_search(&new_member) {
-        Ok(_) => Err(Error::<T>::AlreadyMember.into()),
-        Err(index) => {
-            let _out = members.try_insert(index, new_member.clone()).map_err(|_| Error::<T>::InsertNewMember);
-            Members::<T>::put(members);
-            Self::deposit_event(Event::MemberAdded(new_member));
-            Ok(())
-        }
-      }
-    }
+			let mut members = Members::<T>::get();
+			ensure!(members.len() < T::MaxSize::get() as usize, Error::<T>::MembershipLimitReached);
+			match members.binary_search(&new_member) {
+				Ok(_) => Err(Error::<T>::AlreadyMember.into()),
+				Err(index) => {
+					let _out = members
+						.try_insert(index, new_member.clone())
+						.map_err(|_| Error::<T>::InsertNewMember);
+					Members::<T>::put(members);
+					Self::deposit_event(Event::MemberAdded(new_member));
+					Ok(())
+				},
+			}
+		}
 		//------------------==
 		#[pallet::call_index(11)]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
-		pub fn remove_member(origin: OriginFor<T>) -> DispatchResult {
+		pub fn remove_member_from_vec(origin: OriginFor<T>) -> DispatchResult {
 			let old_member = ensure_signed(origin)?;
 			let mut members = Members::<T>::get();
 
@@ -290,8 +303,8 @@ pub mod pallet {
 				},
 				Err(_) => Err(Error::<T>::NotMember.into()),
 			}
-		// also see `append_or_insert`, `append_or_put` in pallet-elections/phragmen, democracy
-    }
+			// also see `append_or_insert`, `append_or_put` in pallet-elections/phragmen, democracy
+		}
 		//------------------==
 		#[pallet::call_index(9)]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
@@ -316,7 +329,8 @@ pub mod pallet {
 			let now_timestamp = now.try_into().map_err(|_| Error::<T>::ConvertNowToU64)?;
 			info!("info now_timestamp: {:?}", now_timestamp);
 			warn!("warn now_timestamp: {:?}", now_timestamp);
-			Self::deposit_event(Event::<T>::NowTime(now_timestamp));
+			let blocknum = <frame_system::Pallet<T>>::block_number();
+			Self::deposit_event(Event::<T>::NowTime(now_timestamp, blocknum));
 			Ok(())
 		}
 		//------------------==
@@ -432,7 +446,7 @@ pub mod pallet {
 
 			let reward_rate = <RewardRate<T>>::get();
 			info!("reward_rate: {:?}", reward_rate);
-      info!("Did you set reward to none zero?");
+			info!("Did you set reward to none zero?");
 			ensure!(reward_rate > 0, Error::<T>::RewardRateZero);
 			let yyy =
 				amount.checked_mul(reward_rate).ok_or_else(|| Error::<T>::MultiplyOverflow)?;
@@ -496,7 +510,6 @@ pub mod pallet {
 				//return Err(Error::<T>::NoneValue),
 				Some(old) => old.checked_add(1).ok_or_else(|| Error::<T>::UserCountOverflow)?,
 			};
-			<UserCount<T>>::put(user_count);
 			info!("user_count: {:?}", user_count);
 			let user = UserInfo {
 				id: user_id,
@@ -506,23 +519,34 @@ pub mod pallet {
 				unstaked: 0u64,
 				reward: 0u64,
 			};
+			ensure!(!<UserStakes<T>>::contains_key(&from), Error::<T>::AlreadyMember);
 			<UserStakes<T>>::insert(&from, user);
-
+			<UserCount<T>>::put(user_count); //update count after insert
 			Self::deposit_event(Event::UserAdded { user_index: user_id, user: from });
 			Ok(())
 		}
+		/*
+		   fn remove_user(origin) -> DispatchResult {
+			 let old_user = ensure_signed(origin)?;
+			 ensure!(<UserStakes<T>>::contains_key(&old_user), Error::<T>::NotUser);
 
+			 <UserStakes<T>>::remove(&old_user);
+			 UserCount::mutate(|v| *v -= 1);
+			 Self::deposit_event(Event::UserRemoved(old_user));
+			 Ok(())
+		   }
+		*/
 		//------------------==
 		#[pallet::call_index(3)]
 		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(1,1).ref_time())]
-		pub fn initialize(origin: OriginFor<T>, totalsupply: u64) -> DispatchResult {
+		pub fn initialize_token(origin: OriginFor<T>, totalsupply: u64) -> DispatchResult {
 			let from = ensure_signed(origin)?;
-			ensure!(!<Init<T>>::get(), Error::<T>::AlreadyInitialized);
+			ensure!(!<IsInitial<T>>::get(), Error::<T>::InitializedBf);
 			<TotalSupply<T>>::put(totalsupply);
 			info!("totalsupply: {:?}", totalsupply);
 			<Balances<T>>::insert(&from, totalsupply);
 
-			Init::<T>::put(true); //only once initialisation
+			IsInitial::<T>::put(true);
 			Self::deposit_event(Event::Initialized { initializer: from, amount: totalsupply });
 			Ok(())
 		}

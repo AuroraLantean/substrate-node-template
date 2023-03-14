@@ -56,7 +56,7 @@ impl pallet_template::Config for Test {
 	type StringMax = ConstU8<20>;
 	type Currency = Balances;
 	type ForceOrigin = frame_system::EnsureRoot<u64>;
-  type MaxSize = ConstU32<16>;
+	type MaxSize = ConstU32<16>;
 }
 
 /// Existential deposit.

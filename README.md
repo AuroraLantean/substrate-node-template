@@ -1,4 +1,5 @@
 # Staking-RewardToken Pallet
+https://substrate.recipes/events.html
 ## Order of Functions to call 
 
 add_user
