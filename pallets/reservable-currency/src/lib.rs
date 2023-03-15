@@ -49,9 +49,9 @@ pub mod pallet {
 	#[pallet::error]
 	pub enum Error<T> {
 		AmountZero,
-    InsufficientBalance,
-    TransferFailed,
-  }
+		InsufficientBalance,
+		TransferFailed,
+	}
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
@@ -61,8 +61,7 @@ pub mod pallet {
 		pub fn reserve_funds(origin: OriginFor<T>, amount: BalanceOf<T>) -> DispatchResult {
 			let caller = ensure_signed(origin)?;
 
-			T::Currency::reserve(&caller, amount)
-				.map_err(|_| Error::<T>::InsufficientBalance)?;
+			T::Currency::reserve(&caller, amount).map_err(|_| Error::<T>::InsufficientBalance)?;
 
 			let now = <frame_system::Pallet<T>>::block_number();
 
@@ -95,7 +94,8 @@ pub mod pallet {
 		) -> DispatchResult {
 			let sender = ensure_signed(origin)?;
 
-			T::Currency::transfer(&sender, &dest, amount, AllowDeath).map_err(|_| Error::<T>::TransferFailed)?;
+			T::Currency::transfer(&sender, &dest, amount, AllowDeath)
+				.map_err(|_| Error::<T>::TransferFailed)?;
 
 			let now = <frame_system::Pallet<T>>::block_number();
 
@@ -118,7 +118,8 @@ pub mod pallet {
 			// If amount > reserved ... extra > 0
 			let extra = T::Currency::unreserve(&target, amount);
 
-			T::Currency::transfer(&target, &dest, amount - extra, AllowDeath).map_err(|_| Error::<T>::TransferFailed)?;
+			T::Currency::transfer(&target, &dest, amount - extra, AllowDeath)
+				.map_err(|_| Error::<T>::TransferFailed)?;
 
 			let now = <frame_system::Pallet<T>>::block_number();
 			Self::deposit_event(Event::TransferFunds(target, dest, amount - extra, now));

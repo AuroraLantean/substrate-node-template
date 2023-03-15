@@ -8,6 +8,7 @@ members = [
     "pallets/simple-crowdfund",
     "pallets/reservable-currency",
     "pallets/lockable-currency",
+    "pallets/randomness",
     "runtime",
 ]
 [profile.release]

@@ -41,10 +41,10 @@ pub mod pallet {
 		type Currency: Currency<Self::AccountId> + ReservableCurrency<Self::AccountId>;
 
 		/// Handler for the unbalanced increment when rewarding (minting rewards)
-		type Reward: OnUnbalanced<crate::PositiveImbalanceOf<Self>>;
+		type Reward: OnUnbalanced<PositiveImbalanceOf<Self>>;
 
 		/// Handler for the unbalanced decrement when slashing (burning collateral)
-		type Slash: OnUnbalanced<crate::NegativeImbalanceOf<Self>>;
+		type Slash: OnUnbalanced<NegativeImbalanceOf<Self>>;
 	}
 
 	#[pallet::event]

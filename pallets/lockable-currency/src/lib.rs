@@ -13,12 +13,12 @@ type BalanceOf<T> =
 
 #[frame_support::pallet]
 pub mod pallet {
-  use super::*;
+	use super::*;
 	use frame_support::{
-    dispatch::DispatchResult,
-    pallet_prelude::*,
-    traits::{LockIdentifier, LockableCurrency, WithdrawReasons},
-  };
+		dispatch::DispatchResult,
+		pallet_prelude::*,
+		traits::{LockIdentifier, LockableCurrency, WithdrawReasons},
+	};
 	use frame_system::pallet_prelude::*;
 
 	#[pallet::pallet]
@@ -31,7 +31,7 @@ pub mod pallet {
 	pub trait Config: frame_system::Config {
 		/// The overarching event type
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
-    
+
 		/// The lockable currency type
 		type Currency: LockableCurrency<Self::AccountId, Moment = Self::BlockNumber>;
 	}
@@ -50,9 +50,9 @@ pub mod pallet {
 	#[pallet::error]
 	pub enum Error<T> {
 		AmountZero,
-    InsufficientBalance,
-    TransferFailed,
-  }
+		InsufficientBalance,
+		TransferFailed,
+	}
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
@@ -62,7 +62,7 @@ pub mod pallet {
 		pub fn lock_capital(origin: OriginFor<T>, amount: BalanceOf<T>) -> DispatchResult {
 			let user = ensure_signed(origin)?;
 
-      // If the new lock is valid (i.e. not already expired), it will push the struct to the Locks vec in storage. Note that you can lock more funds than a user has. If the lock id already exists, this will update it.
+			// If the new lock is valid (i.e. not already expired), it will push the struct to the Locks vec in storage. Note that you can lock more funds than a user has. If the lock id already exists, this will update it.
 			T::Currency::set_lock(EXAMPLE_ID, &user, amount, WithdrawReasons::all());
 
 			Self::deposit_event(Event::Locked(user, amount));
@@ -75,10 +75,10 @@ pub mod pallet {
 		pub fn extend_lock(origin: OriginFor<T>, amount: BalanceOf<T>) -> DispatchResult {
 			let user = ensure_signed(origin)?;
 
-/*Changes a balance lock (selected by id) so that it becomes less liquid in all parameters or creates a new one if it does not exist.
+			/*Changes a balance lock (selected by id) so that it becomes less liquid in all parameters or creates a new one if it does not exist.
 
-Calling extend_lock on an existing lock id differs from set_lock in that it applies the most severe constraints of the two, while set_lock replaces the lock with the new parameters. As in, extend_lock will set:
-maximum amount, and bitwise mask of all reasons */
+			Calling extend_lock on an existing lock id differs from set_lock in that it applies the most severe constraints of the two, while set_lock replaces the lock with the new parameters. As in, extend_lock will set:
+			maximum amount, and bitwise mask of all reasons */
 			T::Currency::extend_lock(EXAMPLE_ID, &user, amount, WithdrawReasons::all());
 
 			Self::deposit_event(Event::ExtendedLock(user, amount));
