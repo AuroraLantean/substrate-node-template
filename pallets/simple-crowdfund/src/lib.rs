@@ -6,11 +6,11 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
-pub use pallet::*;
 use codec::Encode;
 use frame_support::{storage::child, traits::Currency, PalletId};
-use sp_runtime::traits::AccountIdConversion;
+pub use pallet::*;
 use sp_core::Hasher;
+use sp_runtime::traits::AccountIdConversion;
 use sp_std::prelude::*;
 
 pub type FundIndex = u32;
@@ -27,14 +27,12 @@ const PALLET_ID: PalletId = PalletId(*b"ex/cfund");
 
 #[frame_support::pallet]
 pub mod pallet {
-  use super::*;
+	use super::*;
 	use frame_support::sp_runtime::traits::Zero;
 	use frame_support::traits::{
 		Currency, ExistenceRequirement, ReservableCurrency, WithdrawReasons,
 	};
-	use frame_support::{
-    dispatch::DispatchResult, pallet_prelude::*
-  };
+	use frame_support::{dispatch::DispatchResult, pallet_prelude::*};
 	use frame_system::pallet_prelude::*;
 	use sp_runtime::traits::Saturating;
 
@@ -62,7 +60,9 @@ pub mod pallet {
 		type WithdrawPeriod: Get<Self::BlockNumber>;
 	}
 
-	#[derive(Encode, Decode, Default, Clone, MaxEncodedLen, PartialEq, RuntimeDebug, TypeInfo, Eq)]
+	#[derive(
+		Encode, Decode, Default, Clone, MaxEncodedLen, PartialEq, RuntimeDebug, TypeInfo, Eq,
+	)]
 	//#[cfg_attr(feature = "std", derive(Debug))]
 	pub struct FundInfo<AccountId, Balance, BlockNumber> {
 		/// The account that will receive the funds if the campaign is successful
@@ -153,13 +153,7 @@ pub mod pallet {
 
 			<Funds<T>>::insert(
 				index,
-				FundInfo {
-					beneficiary,
-					init_deposit,
-					raised: Zero::zero(),
-					end,
-					goal,
-				},
+				FundInfo { beneficiary, init_deposit, raised: Zero::zero(), end, goal },
 			);
 
 			Self::deposit_event(Event::Created(index, now));
@@ -177,10 +171,7 @@ pub mod pallet {
 		) -> DispatchResult {
 			let who = ensure_signed(origin)?;
 
-			ensure!(
-				amount >= T::MinContribution::get(),
-				Error::<T>::ContributionTooSmall
-			);
+			ensure!(amount >= T::MinContribution::get(), Error::<T>::ContributionTooSmall);
 			let mut fund = Self::funds(index).ok_or(Error::<T>::InvalidFundIndex)?;
 
 			// Make sure crowdfund has not ended
@@ -251,10 +242,7 @@ pub mod pallet {
 
 			// Check that enough time has passed to remove from storage
 			let now = <frame_system::Pallet<T>>::block_number();
-			ensure!(
-				now >= fund.end + T::WithdrawPeriod::get(),
-				Error::<T>::DeadlineNotReached
-			);
+			ensure!(now >= fund.end + T::WithdrawPeriod::get(), Error::<T>::DeadlineNotReached);
 
 			let account = Self::fund_account_id(index);
 
@@ -338,7 +326,7 @@ impl<T: Config> Pallet<T> {
 	/// The account ID of the fund pot. This actually does computation. If you need to keep using it, then make sure you cache the amount and only call this once.
 	pub fn fund_account_id(index: FundIndex) -> T::AccountId {
 		PALLET_ID.into_sub_account_truncating(index)
-	}//https://paritytech.github.io/substrate/master/sp_runtime/traits/trait.AccountIdConversion.html
+	} //https://paritytech.github.io/substrate/master/sp_runtime/traits/trait.AccountIdConversion.html
 
 	/// Find the ID associated with the fund
 	///
@@ -378,7 +366,7 @@ impl<T: Config> Pallet<T> {
 		// Limiting can be useful, but is beyond the scope of this recipe. For more info, see
 		// https://crates.parity.io/frame_support/storage/child/fn.kill_storage.html
 		//child::kill_storage(&id, None);
-    //https://github.com/paritytech/substrate/blob/master/frame/support/src/storage/child.rs
+		//https://github.com/paritytech/substrate/blob/master/frame/support/src/storage/child.rs
 		let _ = child::clear_storage(&id, None, None);
 	}
 }

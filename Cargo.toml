@@ -6,6 +6,7 @@ members = [
     "pallets/compounding-interest",
     "pallets/currency-imbalances",
     "pallets/simple-crowdfund",
+    "pallets/reservable-currency",
     "runtime",
 ]
 [profile.release]

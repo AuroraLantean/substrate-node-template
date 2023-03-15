@@ -207,6 +207,8 @@ pub mod pallet {
 	#[pallet::error]
 	pub enum Error<T> {
 		AmountZero,
+		BalanceOverflow,
+		TransferFailed,
 		RewardRateZero,
 		NoneValue,
 		VecToArray,
@@ -217,8 +219,6 @@ pub mod pallet {
 		StakedOverflow,
 		InsufficientStaked,
 		InsufficientBalance,
-		BalanceOverflow,
-		TransferFailed,
 		UserDoesNotExist,
 		ConvertU64ToBalance,
 		InsufficientTokens,
@@ -248,7 +248,7 @@ pub mod pallet {
 		}
 	}
 
-	// for the pallet to receive funds from burned, minted, transaction fees, consensus related slashing, align incetives in other pallets
+	// to receive NegativeImbalances, which are generated when a validator is slashed for violating consensus rules, transaction fees are collected, or token burnt ... while positive imbalance is generated when tokens are minted
 	impl<T: Config> OnUnbalanced<NegativeImbalanceOf<T>> for Pallet<T> {
 		fn on_nonzero_unbalanced(amount: NegativeImbalanceOf<T>) {
 			let numeric_amount = amount.peek();
@@ -351,9 +351,6 @@ pub mod pallet {
 			//Operation may result in account going out of existence
 			T::Currency::transfer(&from, &Self::account_id(), amt_bal, AllowDeath)
 				.map_err(|_| Error::<T>::TransferFailed)?;
-			//T::Currency::reserve(&sender, deposit)?;
-			//let err_amount = T::Currency::unreserve(&sender, deposit);
-			//debug_assert!(err_amount.is_zero());
 
 			let mut user =
 				<UserStakes<T>>::get(&from).ok_or_else(|| Error::<T>::UserDoesNotExist)?;

@@ -1,13 +1,14 @@
 #![cfg_attr(not(feature = "std"), no_std)]
-//! A pallet that demonstrates Fixed Point arithmetic in the context of two simple bank accounts
-//! that accrue compounding interest.
+//! A pallet that demonstrates Fixed Point arithmetic in the context of two simple bank accounts that accrue compounding interest.
+//! Floating point arithmetic is nondeterministic which means that different processors compute (slightly) different results for the same operation.
 //!
 //! The discrete account accrues interest every ten blocks and is implemented using
 //! Substrate's `Percent` implementation of fixed point.
 //!
 //! The continuous account accrues interest continuously and is implemented using
 //! Substrate-fixed's `I32F32` implementation of fixed point.
-//https://github.com/encointer/substrate-fixed
+//! https://github.com/encointer/substrate-fixed
+//! Use from_num and to_num to convert between substrate-fixed types and Rust primitive types
 
 use sp_arithmetic::Percent;
 use sp_std::convert::TryInto;
@@ -64,7 +65,14 @@ pub mod pallet {
 		/// This happens every ten blocks
 		DiscreteInterestApplied(u64),
 	}
-
+	// Errors inform users that usercount went wrong.
+	#[pallet::error]
+	pub enum Error<T> {
+		AmountZero,
+		NoneValue,
+		MultiplyOverflow,
+		Underflow,
+	}
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
@@ -175,8 +183,7 @@ pub mod pallet {
 }
 
 impl<T: Config> Pallet<T> {
-	/// A helper function to evaluate the current value of the continuously compounding interest
-	/// account
+	/// A helper function to evaluate the current value of the continuously compounding interest account
 	fn value_of_continuous_account(now: &<T as frame_system::Config>::BlockNumber) -> I32F32 {
 		// Get the old state of the accout
 		let ContinuousAccountData { principal, deposit_date } = ContinuousAccount::<T>::get();
@@ -188,9 +195,10 @@ impl<T: Config> Pallet<T> {
 			.expect("blockchain will not exceed 2^32 blocks; qed");
 		let elapsed_time_i32f32 = I32F32::from_num(elapsed_time_u32);
 		let exponent: I32F32 = Self::continuous_interest_rate() * elapsed_time_i32f32;
-		let exp_result : I32F32 = exp(exponent)
-			.expect("Interest will not overflow account (at least not until the learner has learned enough about fixed point :)");
-
+		let exp_result: I32F32 = exp(exponent).expect("Interest should not overflow");
+		//.map_err(|_|Error::<T>::MultiplyOverflow)?;
+		// https://github.com/encointer/substrate-fixed
+		// https://substrate.recipes/fixed-point.html
 		// Return the result interest = principal * e ^ (rate * time)
 		principal * exp_result
 	}
