@@ -10,6 +10,7 @@ members = [
     "pallets/lockable-currency",
     "pallets/double-map",
     "pallets/randomness",
+    "pallets/fixed-point",
     "runtime",
 ]
 [profile.release]
