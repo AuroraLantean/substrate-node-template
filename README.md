@@ -36,6 +36,10 @@ without launching it:
 cargo build --release
 ```
 
+### Deploy Ink contracts
+compile ink contracts
+upload the this file: contract_project/target/ink/ink_contract.contract
+
 ### Embedded Docs
 
 Once the project has been built, the following command can be used to explore all parameters and

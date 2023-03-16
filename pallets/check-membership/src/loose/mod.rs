@@ -2,8 +2,9 @@
 //! only dispatchable function, `check_membership`, the caller is checked against a set of approved
 //! callers. If the caller is a member of the set, the pallet's `IsAMember` event is emitted. Otherwise a `NotAMember` error is returned.
 //!
-//! The list of approved members is provided by the `vec-set` pallet. In order for this pallet to be
-//! used, the `vec-set` pallet must also be present in the runtime.
+//! The list of approved members is provided by an external source and exposed through an associated
+//! type in this pallet's configuration trait. Any type that implements the `AccountSet` trait can be
+//! used to supply the membership set.
 
 pub use pallet::*;
 
@@ -12,14 +13,19 @@ pub use pallet::*;
 
 #[frame_support::pallet]
 pub mod pallet {
+  use account_set::AccountSet;
 	use frame_support::{dispatch::DispatchResult, pallet_prelude::*};
 	use frame_system::pallet_prelude::*;
 
-	/// The pallet's configuration trait.
-	/// Notice the explicit tight coupling to the `vec-set` pallet
+	/// The pallet's configuration trait
+	/// Notice the loose coupling: any pallet that implements the `AccountSet` behavior works here.
 	#[pallet::config]
-	pub trait Config: frame_system::Config + pallet_template::Config {
+	pub trait Config: frame_system::Config {
+		/// The ubiquitous event type
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
+
+		/// A type that will supply a set of members to check access control against
+		type MembershipSource: AccountSet<AccountId = Self::AccountId>;
 	}
 
 	#[pallet::event]
@@ -44,16 +50,20 @@ pub mod pallet {
 
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
-		//------------------==
+		/// Checks whether the caller is a member of the set of account IDs provided by the
+		/// MembershipSource type. Emits an event if they are, and errors if not.
 		#[pallet::call_index(0)]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
 		pub fn check_membership(origin: OriginFor<T>) -> DispatchResult {
 			let caller = ensure_signed(origin)?;
-			let members = pallet_template::Pallet::<T>::members();
+
+			// Get the members from the `vec-set` pallet
+			let members = T::MembershipSource::accounts();
 
 			// Check whether the caller is a member
-			members.binary_search(&caller).map_err(|_| Error::<T>::NotAMember)?;
+			ensure!(members.contains(&caller), Error::<T>::NotAMember);
 
+			// If the previous call didn't error, then the caller is a member, so emit the event
 			Self::deposit_event(Event::IsAMember(caller));
 			Ok(())
 		}

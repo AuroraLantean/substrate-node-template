@@ -13,6 +13,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "account-set"
+version = "4.0.0-dev"
+dependencies = [
+ "sp-std",
+]
+
+[[package]]
 name = "addr2line"
 version = "0.17.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -761,6 +768,7 @@ dependencies = [
 name = "check-membership"
 version = "4.0.0-dev"
 dependencies = [
+ "account-set",
  "frame-support",
  "frame-system",
  "pallet-template",
