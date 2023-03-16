@@ -4,7 +4,7 @@
 /// Learn more about FRAME and the core library of Substrate FRAME pallets:
 /// <https://docs.substrate.io/reference/frame-pallets/>
 pub use pallet::*;
-use pallet_timestamp::{self as timestamp};
+use pallet_timestamp as timestamp;
 //use sp_std::collections::btree_set::BTreeSet;
 
 #[cfg(test)]
@@ -41,7 +41,7 @@ pub mod pallet {
 	use super::*;
 	use frame_support::{
 		dispatch::DispatchResult,
-		inherent::Vec,
+		inherent::Vec, //use sp_std::vec::Vec;
 		log::{info, warn},
 		pallet_prelude::*,
 		sp_runtime::traits::AccountIdConversion,

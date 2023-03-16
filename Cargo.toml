@@ -8,6 +8,7 @@ members = [
     "pallets/simple-crowdfund",
     "pallets/reservable-currency",
     "pallets/lockable-currency",
+    "pallets/double-map",
     "pallets/randomness",
     "runtime",
 ]

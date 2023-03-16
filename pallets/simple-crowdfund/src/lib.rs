@@ -362,11 +362,19 @@ impl<T: Config> Pallet<T> {
 	/// storage write.
 	pub fn crowdfund_clear(index: FundIndex) {
 		let id = Self::id_from_index(index);
-		// The None here means we aren't setting a limit to how many keys to delete.
-		// Limiting can be useful, but is beyond the scope of this recipe. For more info, see
-		// https://crates.parity.io/frame_support/storage/child/fn.kill_storage.html
-		//child::kill_storage(&id, None);
 		//https://github.com/paritytech/substrate/blob/master/frame/support/src/storage/child.rs
-		let _ = child::clear_storage(&id, None, None);
+		let out = child::clear_storage(&id, Some(50), None);
+
+		let mut maybe = out.maybe_cursor;
+
+		while maybe.is_some() {
+			if let Some(v) = maybe {
+				let array: &[u8] = &v[..];
+
+				let out = child::clear_storage(&id, Some(10), Some(array));
+				let out_maybe = out.maybe_cursor;
+				maybe = out_maybe;
+			}
+		}
 	}
 }

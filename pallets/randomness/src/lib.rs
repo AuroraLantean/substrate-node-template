@@ -1,10 +1,9 @@
 //! Generating (insecure) randomness
 #![cfg_attr(not(feature = "std"), no_std)]
 
-pub use pallet::*;
-//use parity_scale_codec::Encode;
-use sp_std::vec::Vec;
 use frame_support::PalletId;
+pub use pallet::*;
+use sp_std::vec::Vec;
 const PALLET_ID: PalletId = PalletId(*b"Staking!");
 
 //#[cfg(test)]
@@ -12,13 +11,11 @@ const PALLET_ID: PalletId = PalletId(*b"Staking!");
 
 #[frame_support::pallet]
 pub mod pallet {
-  use super::*;
+	use super::*;
 	use frame_support::{
-    dispatch::DispatchResult,
-    pallet_prelude::*,
-    sp_runtime::app_crypto::sp_core::H256,
-    traits::Randomness
-  };
+		dispatch::DispatchResult, pallet_prelude::*, sp_runtime::app_crypto::sp_core::H256,
+		traits::Randomness,
+	};
 	use frame_system::pallet_prelude::*;
 
 	#[pallet::pallet]
@@ -41,7 +38,7 @@ pub mod pallet {
 	#[pallet::generate_deposit(pub(super) fn deposit_event)]
 	pub enum Event<T: Config> {
 		/// First element is raw seed, second is using nonce.
-		RandomnessConsumed(H256, H256),//raw seed and nonce
+		RandomnessConsumed(H256, H256), //raw seed and nonce
 	}
 
 	#[pallet::error]
@@ -58,12 +55,12 @@ pub mod pallet {
 	#[pallet::call]
 	impl<T: Config> Pallet<T> {
 		/// Grab a random seed and random value from the randomness collective flip pallet
-    #[pallet::call_index(0)]
-    #[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
+		#[pallet::call_index(0)]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
 		pub fn consume_randomness(origin: OriginFor<T>) -> DispatchResult {
 			let caller = ensure_signed(origin)?;
 
-      //This seed changes per block
+			//This seed changes per block
 			let random_seed = T::RandomnessSource::random_seed();
 
 			// subject does not add security or entropy)
@@ -79,19 +76,19 @@ pub mod pallet {
 impl<T: Config> Pallet<T> {
 	/// Reads the nonce from storage, increments the stored nonce, and returns the encoded nonce to the caller.
 	fn get_random_subject(caller: T::AccountId) -> Vec<u8> {
-    let binding = caller.to_string();
-    let caller_u8 = binding.as_bytes();
-    
-    let blocknum = <frame_system::Pallet<T>>::block_number();
-    let binding = blocknum.to_string();
-    let blocknum_u8 = binding.as_bytes();
+		let binding = caller.to_string();
+		let caller_u8 = binding.as_bytes();
+
+		let blocknum = <frame_system::Pallet<T>>::block_number();
+		let binding = blocknum.to_string();
+		let blocknum_u8 = binding.as_bytes();
 
 		let nonce = Nonce::<T>::get();
-    let nonce_u8 = nonce.to_be_bytes();
+		let nonce_u8 = nonce.to_be_bytes();
 		Nonce::<T>::put(nonce.wrapping_add(1));
 
-    let pallet_id = PALLET_ID.0;
-    let sum = [caller_u8, blocknum_u8, &nonce_u8, &pallet_id].concat();
+		let pallet_id = PALLET_ID.0;
+		let sum = [caller_u8, blocknum_u8, &nonce_u8, &pallet_id].concat();
 		sum
 	}
 }

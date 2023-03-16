@@ -1,5 +1,5 @@
 [package]
-name = "check-membership"
+name = "double-map"
 version = "4.0.0-dev"
 edition = "2021"
 authors = ['Substrate DevHub <https://github.com/substrate-developer-hub>']
@@ -20,8 +20,6 @@ frame-system = { version = "4.0.0-dev", default-features = false, git = "https:/
 
 sp-runtime = { version = "7.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
 sp-std = { version = "5.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
-pallet-template = { path = '../template', default-features = false }
-account-set = { path = '../../traits/account-set', default-features = false }
 
 [dev-dependencies]
 sp-core = { version = "7.0.0", default-features = false, git = "https://github.com/paritytech/substrate.git", branch = "polkadot-v0.9.37" }
@@ -35,6 +33,4 @@ std = [
 	'codec/std',
 	'sp-runtime/std',
 	'sp-std/std',
-	'pallet-template/std',
-	'account-set/std',
 ]
