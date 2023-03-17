@@ -146,6 +146,7 @@ pub mod pallet {
 			// not protected against overflow, see safemath section
 			FundCount::<T>::put(index + 1);
 
+			//https://paritytech.github.io/substrate/master/frame_support/traits/tokens/currency/trait.Currency.html
 			// No fees are paid here if we need to make this account; that's why we don't just use the stock `transfer`.
 			T::Currency::resolve_creating(&Self::fund_account_id(index), imb);
 
@@ -234,7 +235,7 @@ pub mod pallet {
 		#[pallet::call_index(3)]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
 		pub fn dissolve(origin: OriginFor<T>, index: FundIndex) -> DispatchResult {
-			let reporter = ensure_signed(origin)?;
+			let dissolver = ensure_signed(origin)?;
 
 			let fund = Self::funds(index).ok_or(Error::<T>::InvalidFundIndex)?;
 
@@ -246,7 +247,7 @@ pub mod pallet {
 
 			// Dissolver collects the init_deposit and any remaining funds
 			let _ = T::Currency::resolve_creating(
-				&reporter,
+				&dissolver,
 				T::Currency::withdraw(
 					&account,
 					fund.init_deposit + fund.raised,
@@ -261,13 +262,12 @@ pub mod pallet {
 			// This is possible thanks to the use of a child tree.
 			Self::crowdfund_clear(index);
 
-			Self::deposit_event(Event::Dissolved(index, now, reporter));
+			Self::deposit_event(Event::Dissolved(index, now, dissolver));
 			Ok(())
 		}
 
 		/// Dispense a payment to the beneficiary of a successful crowdfund.
-		/// The beneficiary receives the contributed funds and the caller receives
-		/// the init_deposit as a reward to incentivize clearing settled crowdfunds out of storage.
+		/// The beneficiary receives the contributed funds and the caller receives the init_deposit as a reward to incentivize clearing settled crowdfunds out of storage.
 		//------------------==
 		#[pallet::call_index(4)]
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]

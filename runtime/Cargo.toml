@@ -53,6 +53,7 @@ frame-system-benchmarking = { version = "4.0.0-dev", default-features = false, g
 
 # Local Dependencies
 pallet-template = { version = "4.0.0-dev", default-features = false, path = "../pallets/template" }
+staking-reward = { version = "4.0.0-dev", default-features = false, path = "../pallets/staking-reward" }
 check-membership = { version = "4.0.0-dev", default-features = false, path = "../pallets/check-membership" }
 
 [build-dependencies]

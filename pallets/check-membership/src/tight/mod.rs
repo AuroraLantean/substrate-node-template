@@ -18,7 +18,7 @@ pub mod pallet {
 	/// The pallet's configuration trait.
 	/// Notice the explicit tight coupling to the `vec-set` pallet
 	#[pallet::config]
-	pub trait Config: frame_system::Config + pallet_template::Config {
+	pub trait Config: frame_system::Config + staking_reward::Config {
 		type RuntimeEvent: From<Event<Self>> + IsType<<Self as frame_system::Config>::RuntimeEvent>;
 	}
 
@@ -49,7 +49,7 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
 		pub fn check_membership(origin: OriginFor<T>) -> DispatchResult {
 			let caller = ensure_signed(origin)?;
-			let members = pallet_template::Pallet::<T>::members();
+			let members = staking_reward::Pallet::<T>::members();
 
 			// Check whether the caller is a member
 			members.binary_search(&caller).map_err(|_| Error::<T>::NotAMember)?;

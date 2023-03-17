@@ -2,6 +2,7 @@
 members = [
     "node",
     "pallets/template",
+    "pallets/staking-reward",
     "pallets/check-membership",
     "pallets/compounding-interest",
     "pallets/currency-imbalances",
