@@ -57,7 +57,6 @@ pub mod pallet {
 	#[pallet::pallet]
 	#[pallet::generate_store(pub(super) trait Store)]
 	pub struct Pallet<T>(_);
-	//pub struct Pallet<T, I = ()>(_);
 
 	/// Configure the pallet by specifying the parameters and types on which it depends.
 	#[pallet::config]
@@ -88,7 +87,7 @@ pub mod pallet {
 	} //<T as frame_system::Config>
 	#[pallet::storage]
 	#[pallet::getter(fn blog_post_comments)]
-	pub(super) type PostComments<T: Config> =
+	pub type PostComments<T: Config> =
 		StorageMap<_, Twox64Concat, T::Hash, BoundedVec<PostComment<T>, T::MaxSize>>;
 
 	#[derive(Default, Encode, Decode, Clone, MaxEncodedLen, PartialEq, RuntimeDebug, TypeInfo)]
@@ -517,6 +516,8 @@ pub mod pallet {
 			};
 			ensure!(!<UserStakes<T>>::contains_key(&from), Error::<T>::AlreadyMember);
 			<UserStakes<T>>::insert(&from, user);
+
+			//UserCount::<T>::mutate(|v| *v += 1);
 			<UserCount<T>>::put(user_count); //update count after insert
 			Self::deposit_event(Event::UserAdded { user_index: user_id, user: from });
 			Ok(())

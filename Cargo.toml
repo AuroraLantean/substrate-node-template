@@ -11,6 +11,7 @@ members = [
     "pallets/double-map",
     "pallets/randomness",
     "pallets/fixed-point",
+    "pallets/ringbuffer-queue",
     "runtime",
 ]
 [profile.release]
