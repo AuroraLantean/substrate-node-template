@@ -45,7 +45,7 @@ pub mod pallet {
 		pallet_prelude::*,
 		sp_runtime::traits::AccountIdConversion,
 		//sp_runtime::SaturatedConversion,
-		traits::{Currency, ExistenceRequirement::AllowDeath, Hash, Imbalance, OnUnbalanced},
+		traits::{Currency, ExistenceRequirement::AllowDeath, Imbalance, OnUnbalanced},
 	};
 	use frame_system::pallet_prelude::*;
 	use sp_std::prelude::*;
@@ -73,21 +73,6 @@ pub mod pallet {
 		/// Max size for vector
 		type MaxSize: Get<u32>;
 	}
-
-	#[derive(Encode, Decode, Clone, MaxEncodedLen, PartialEq, RuntimeDebug, TypeInfo)] //Default, Eq
-	#[scale_info(skip_type_params(T))]
-	pub struct PostComment<T: Config> {
-		pub content: BoundedVec<u8, T::MaxSize>,
-		pub post_id: T::Hash,
-		pub who: T::AccountId,
-		pub hash: Hash,
-		pub balance: BalanceOf<T>,
-		pub block_number: BlockNumberFor<T>,
-	} //<T as frame_system::Config>
-	#[pallet::storage]
-	#[pallet::getter(fn blog_post_comments)]
-	pub type PostComments<T: Config> =
-		StorageMap<_, Twox64Concat, T::Hash, BoundedVec<PostComment<T>, T::MaxSize>>;
 
 	#[derive(Default, Encode, Decode, Clone, MaxEncodedLen, PartialEq, RuntimeDebug, TypeInfo)]
 	//#[scale_info(skip_type_params(T))]
@@ -129,13 +114,11 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn balances)]
-	pub type Balances<T: Config> =
-		StorageMap<_, Blake2_128Concat, T::AccountId, u64, ValueQuery>;
+	pub type Balances<T: Config> = StorageMap<_, Blake2_128Concat, T::AccountId, u64, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn members)]
-	pub type Members<T: Config> =
-		StorageValue<_, BoundedVec<T::AccountId, T::MaxSize>, ValueQuery>;
+	pub type Members<T: Config> = StorageValue<_, BoundedVec<T::AccountId, T::MaxSize>, ValueQuery>;
 
 	#[pallet::hooks]
 	impl<T: Config> Hooks<BlockNumberFor<T>> for Pallet<T> {
@@ -270,7 +253,7 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
 		pub fn add_member_into_vec(origin: OriginFor<T>) -> DispatchResult {
 			let new_member = ensure_signed(origin)?;
-      ensure!(!Self::is_member(&new_member), Error::<T>::AlreadyMember);
+			ensure!(!Self::is_member(&new_member), Error::<T>::AlreadyMember);
 
 			let mut members = Members::<T>::get();
 			ensure!(members.len() < T::MaxSize::get() as usize, Error::<T>::MembershipLimitReached);
