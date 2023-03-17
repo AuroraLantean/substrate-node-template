@@ -5,9 +5,9 @@ description = "A fresh FRAME-based Substrate node, ready for hacking."
 authors = ["Substrate DevHub <https://github.com/substrate-developer-hub>"]
 homepage = "https://substrate.io/"
 edition = "2021"
-license = "Unlicense"
+license = "GPL-3.0-or-later"
 publish = false
-repository = "https://github.com/substrate-developer-hub/substrate-node-template/"
+repository = "https://github.com/AuroraLantean/substrate-node-template"
 build = "build.rs"
 
 [package.metadata.docs.rs]

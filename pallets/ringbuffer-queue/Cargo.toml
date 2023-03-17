@@ -1,11 +1,13 @@
 [package]
 name = "ringbuffer-queue"
 version = "4.0.0-dev"
+authors = ["Substrate DevHub <https://github.com/substrate-developer-hub>"]
+homepage = "https://substrate.io"
 edition = "2021"
-authors = ['Substrate DevHub <https://github.com/substrate-developer-hub>']
-repository = 'https://github.com/substrate-developer-hub/recipes'
-description = "A pallet that demonstrates a ringbuffer queue built on top of Substrate's storage"
 license = "GPL-3.0-or-later"
+publish = false
+repository = "https://github.com/AuroraLantean/substrate-node-template"
+description = "A pallet that demonstrates a ringbuffer queue built on top of Substrate's storage"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

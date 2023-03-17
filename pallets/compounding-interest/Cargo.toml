@@ -1,13 +1,13 @@
 [package]
 name = "compounding-interest"
 version = "4.0.0-dev"
-description = "FRAME pallet template for defining custom runtime logic."
 authors = ["Substrate DevHub <https://github.com/substrate-developer-hub>"]
 homepage = "https://substrate.io"
 edition = "2021"
-license = "Unlicense"
+license = "GPL-3.0-or-later"
 publish = false
-repository = "https://github.com/substrate-developer-hub/substrate-node-template/"
+repository = "https://github.com/AuroraLantean/substrate-node-template"
+description = "FRAME pallet template for defining custom runtime logic."
 
 [package.metadata.docs.rs]
 targets = ["x86_64-unknown-linux-gnu"]

@@ -20,7 +20,7 @@ frame_support::construct_runtime!(
 	{
 		System: frame_system,
 	Balances: pallet_balances,
-		DaModule: staking_reward,
+		StakingReward: staking_reward,
 	}
 );
 

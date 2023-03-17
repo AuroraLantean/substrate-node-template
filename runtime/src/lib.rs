@@ -50,10 +50,10 @@ use pallet_transaction_payment::{ConstFeeMultiplier, CurrencyAdapter, Multiplier
 pub use sp_runtime::BuildStorage;
 pub use sp_runtime::{Perbill, Permill};
 
+pub use check_membership;
 /// Import the template pallet.
 pub use pallet_template;
 pub use staking_reward;
-pub use check_membership;
 
 /// An index to a block.
 pub type BlockNumber = u32;
@@ -408,7 +408,7 @@ construct_runtime!(
 		Sudo: pallet_sudo,
 		// Include the custom logic from the pallet-template in the runtime.
 		Template: pallet_template,
-    StakingReward: staking_reward,
+		StakingReward: staking_reward,
 		Contracts: pallet_contracts,
 		CheckMembership: check_membership::tight,
 	}

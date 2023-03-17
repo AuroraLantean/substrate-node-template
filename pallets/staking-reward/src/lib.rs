@@ -5,7 +5,6 @@
 /// <https://docs.substrate.io/reference/frame-pallets/>
 pub use pallet::*;
 use pallet_timestamp as timestamp;
-//use sp_std::collections::btree_set::BTreeSet;
 
 #[cfg(test)]
 mod mock;
@@ -126,16 +125,16 @@ pub mod pallet {
 
 	#[pallet::storage]
 	#[pallet::getter(fn init)]
-	pub type IsInitial<T: Config> = StorageValue<_, bool, ValueQuery>;
+	pub type IsInitial<T> = StorageValue<_, bool, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn balances)]
-	pub(super) type Balances<T: Config> =
+	pub type Balances<T: Config> =
 		StorageMap<_, Blake2_128Concat, T::AccountId, u64, ValueQuery>;
 
 	#[pallet::storage]
 	#[pallet::getter(fn members)]
-	pub(super) type Members<T: Config> =
+	pub type Members<T: Config> =
 		StorageValue<_, BoundedVec<T::AccountId, T::MaxSize>, ValueQuery>;
 
 	#[pallet::hooks]
@@ -271,8 +270,11 @@ pub mod pallet {
 		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
 		pub fn add_member_into_vec(origin: OriginFor<T>) -> DispatchResult {
 			let new_member = ensure_signed(origin)?;
+      ensure!(!Self::is_member(&new_member), Error::<T>::AlreadyMember);
+
 			let mut members = Members::<T>::get();
 			ensure!(members.len() < T::MaxSize::get() as usize, Error::<T>::MembershipLimitReached);
+
 			match members.binary_search(&new_member) {
 				Ok(_) => Err(Error::<T>::AlreadyMember.into()),
 				Err(index) => {
@@ -611,5 +613,11 @@ pub mod pallet {
 				},
 			}
 		}
+	}
+}
+
+impl<T: Config> Pallet<T> {
+	pub fn is_member(who: &T::AccountId) -> bool {
+		<Members<T>>::get().contains(who)
 	}
 }
