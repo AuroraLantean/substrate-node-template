@@ -15,6 +15,7 @@ members = [
     "pallets/ringbuffer-queue",
     "pallets/storage-cache",
     "pallets/struct-storage",
+    "pallets/weights",
     "runtime",
 ]
 [profile.release]

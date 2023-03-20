@@ -1,0 +1,358 @@
+
+Running check 'Phase 1: Preparation'
+=================
+APT Repositories:
+=================
+Repos:
+  No active apt repos in: /etc/apt/sources.list 
+  Active apt repos in: /etc/apt/sources.list.d/balena-etcher.list 
+  1: deb [signed-by=/usr/share/keyrings/balena-etcher-archive-keyring.gpg] https://dl.cloudsmith.io/public/balena/etcher/deb/linuxmint una main
+  2: deb-src [signed-by=/usr/share/keyrings/balena-etcher-archive-keyring.gpg] https://dl.cloudsmith.io/public/balena/etcher/deb/linuxmint una main
+  Active apt repos in: /etc/apt/sources.list.d/brave-browser-release.list 
+  1: deb [signed-by=/usr/share/keyrings/brave-browser-archive-keyring.gpg arch=amd64] https://brave-browser-apt-release.s3.brave.com/ stable main
+  Active apt repos in: /etc/apt/sources.list.d/cappelikan-ppa-focal.list 
+  1: deb http://ppa.launchpad.net/cappelikan/ppa/ubuntu focal main
+  Active apt repos in: /etc/apt/sources.list.d/devel:kubic:libcontainers:stable.list 
+  1: deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /
+  Active apt repos in: /etc/apt/sources.list.d/docker.list 
+  1: deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu focal stable
+  Active apt repos in: /etc/apt/sources.list.d/element-io.list 
+  1: deb [signed-by=/usr/share/keyrings/element-io-archive-keyring.gpg] https://packages.element.io/debian/ default main
+  Active apt repos in: /etc/apt/sources.list.d/ethereum-ethereum-focal.list 
+  1: deb http://ppa.launchpad.net/ethereum/ethereum/ubuntu focal main
+  Active apt repos in: /etc/apt/sources.list.d/git-core-ppa-focal.list 
+  1: deb http://ppa.launchpad.net/git-core/ppa/ubuntu focal main
+  Active apt repos in: /etc/apt/sources.list.d/google-chrome.list 
+  1: deb [arch=amd64] https://dl.google.com/linux/chrome/deb/ stable main
+  Active apt repos in: /etc/apt/sources.list.d/google-cloud-sdk.list 
+  1: deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main
+  Active apt repos in: /etc/apt/sources.list.d/mysql.list 
+  1: deb http://repo.mysql.com/apt/ubuntu/ focal mysql-apt-config
+  2: deb http://repo.mysql.com/apt/ubuntu/ focal mysql-cluster-8.0
+  3: deb http://repo.mysql.com/apt/ubuntu/ focal mysql-tools
+  4: deb-src http://repo.mysql.com/apt/ubuntu/ focal mysql-cluster-8.0
+  Active apt repos in: /etc/apt/sources.list.d/official-package-repositories.list 
+  1: deb http://free.nchc.org.tw/linuxmint/packages una main upstream import backport
+  2: deb http://ubuntu.cs.nctu.edu.tw/ubuntu focal main restricted universe multiverse
+  3: deb http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates main restricted universe multiverse
+  4: deb http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports main restricted universe multiverse
+  5: deb http://security.ubuntu.com/ubuntu/ focal-security main restricted universe multiverse
+  6: deb http://archive.canonical.com/ubuntu/ focal partner
+  Active apt repos in: /etc/apt/sources.list.d/ozmartian-apps-focal.list 
+  1: deb http://ppa.launchpad.net/ozmartian/apps/ubuntu focal main
+  Active apt repos in: /etc/apt/sources.list.d/skype-stable.list 
+  1: deb [arch=amd64] https://repo.skype.com/deb stable main
+  Active apt repos in: /etc/apt/sources.list.d/slack.list 
+  1: deb https://packagecloud.io/slacktechnologies/slack/debian/ jessie main
+  Active apt repos in: /etc/apt/sources.list.d/sublime-text.list 
+  1: deb https://download.sublimetext.com/ apt/stable/
+  Active apt repos in: /etc/apt/sources.list.d/vscode.list 
+  1: deb [arch=amd64,arm64,armhf] http://packages.microsoft.com/repos/code stable main
+  Active apt repos in: /etc/apt/sources.list.d/waydroid.list 
+  1: deb [signed-by=/usr/share/keyrings/waydroid.gpg] https://repo.waydro.id/ focal main
+=================
+
+Running check 'Linux Mint version'
+Check succeeded:  Linux Mint version
+
+Running check 'Power source'
+Check succeeded:  Power source
+
+Running check 'APT cache'
+rm -rf /var/lib/apt/lists/*
+DEBIAN_PRIORITY=critical apt-get update
+Ign:1 http://free.nchc.org.tw/linuxmint/packages una InRelease
+Get:2 http://free.nchc.org.tw/linuxmint/packages una Release [24.1 kB]
+Get:3 http://ubuntu.cs.nctu.edu.tw/ubuntu focal InRelease [265 kB]
+Get:4 http://free.nchc.org.tw/linuxmint/packages una Release.gpg [833 B]
+Get:5 http://packages.microsoft.com/repos/code stable InRelease [3023 B]
+Get:6 http://repo.mysql.com/apt/ubuntu focal InRelease [12.9 kB]
+Get:7 https://dl.google.com/linux/chrome/deb stable InRelease [1811 B]
+Get:8 https://download.docker.com/linux/ubuntu focal InRelease [57.7 kB]
+Get:9 https://repo.skype.com/deb stable InRelease [4502 B]
+Get:10 https://brave-browser-apt-release.s3.brave.com stable InRelease [7546 B]
+Get:11 http://free.nchc.org.tw/linuxmint/packages una/main amd64 Packages [16.2 kB]
+Get:12 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates InRelease [114 kB]
+Get:13 http://free.nchc.org.tw/linuxmint/packages una/main i386 Packages [15.6 kB]
+Get:14 http://free.nchc.org.tw/linuxmint/packages una/upstream i386 Packages [13.4 kB]
+Get:15 http://free.nchc.org.tw/linuxmint/packages una/upstream amd64 Packages [50.4 kB]
+Get:16 http://free.nchc.org.tw/linuxmint/packages una/import i386 Packages [3273 B]
+Get:17 http://free.nchc.org.tw/linuxmint/packages una/import amd64 Packages [8181 B]
+Get:18 http://free.nchc.org.tw/linuxmint/packages una/backport amd64 Packages [90.3 kB]
+Get:19 http://free.nchc.org.tw/linuxmint/packages una/backport i386 Packages [27.1 kB]
+Get:20 http://packages.microsoft.com/repos/code stable/main armhf Packages [63.7 kB]
+Get:21 https://dl.cloudsmith.io/public/balena/etcher/deb/linuxmint una InRelease [5068 B]
+Get:22 http://packages.microsoft.com/repos/code stable/main arm64 Packages [63.3 kB]
+Get:23 http://packages.microsoft.com/repos/code stable/main amd64 Packages [62.9 kB]
+Get:24 https://packages.cloud.google.com/apt cloud-sdk InRelease [6361 B]
+Get:25 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports InRelease [108 kB]
+Get:26 http://security.ubuntu.com/ubuntu focal-security InRelease [114 kB]
+Get:27 http://archive.canonical.com/ubuntu focal InRelease [12.1 kB]
+Get:28 https://dl.google.com/linux/chrome/deb stable/main amd64 Packages [1079 B]
+Get:29 http://ppa.launchpad.net/cappelikan/ppa/ubuntu focal InRelease [18.1 kB]
+Get:30 https://download.docker.com/linux/ubuntu focal/stable amd64 Packages [24.7 kB]
+Get:32 https://download.sublimetext.com apt/stable/ InRelease [2536 B]
+Get:33 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/main i386 Packages [718 kB]
+Err:24 https://packages.cloud.google.com/apt cloud-sdk InRelease
+  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY B53DC80D13EDEF05
+Get:34 https://dl.cloudsmith.io/public/balena/etcher/deb/linuxmint una/main amd64 Packages [1681 B]
+Get:35 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/main amd64 Packages [970 kB]
+Get:36 https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04  InRelease [1642 B]
+Get:37 https://packages.element.io/debian default InRelease [2898 B]
+Get:38 https://repo.waydro.id focal InRelease [1343 B]
+Get:39 https://brave-browser-apt-release.s3.brave.com stable/main amd64 Packages [4246 B]
+Get:40 http://archive.canonical.com/ubuntu focal/partner amd64 Packages [856 B]
+Get:41 https://dl.cloudsmith.io/public/balena/etcher/deb/linuxmint una/main i386 Packages [1363 B]
+Get:42 http://ppa.launchpad.net/ethereum/ethereum/ubuntu focal InRelease [17.5 kB]
+Get:43 https://repo.skype.com/deb stable/main amd64 Packages [2191 B]
+Get:44 http://repo.mysql.com/apt/ubuntu focal/mysql-cluster-8.0 Sources [1059 B]
+Get:45 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/main Translation-en [506 kB]
+Get:46 https://download.sublimetext.com apt/stable/ Packages [6373 B]
+Err:36 https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04  InRelease
+  The following signatures were invalid: EXPKEYSIG 4D64390375060AA4 devel:kubic OBS Project <devel:kubic@build.opensuse.org>
+Get:47 http://archive.canonical.com/ubuntu focal/partner Translation-en [384 B]
+Get:48 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/main amd64 DEP-11 Metadata [494 kB]
+Get:31 https://packagecloud.io/slacktechnologies/slack/debian jessie InRelease [24.4 kB]
+Get:49 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/main amd64 c-n-f Metadata [29.5 kB]
+Get:50 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/restricted i386 Packages [8112 B]
+Get:51 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/restricted amd64 Packages [22.0 kB]
+Get:52 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/restricted Translation-en [6212 B]
+Get:53 http://security.ubuntu.com/ubuntu focal-security/main amd64 Packages [2045 kB]
+Get:54 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/restricted amd64 c-n-f Metadata [392 B]
+Get:55 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/universe i386 Packages [4642 kB]
+Get:56 http://repo.mysql.com/apt/ubuntu focal/mysql-apt-config amd64 Packages [565 B]
+Get:57 http://ppa.launchpad.net/git-core/ppa/ubuntu focal InRelease [23.8 kB]
+Get:58 https://packages.element.io/debian default/main amd64 Packages [1131 B]
+Get:60 http://repo.mysql.com/apt/ubuntu focal/mysql-apt-config i386 Packages [565 B]
+Get:61 https://packages.element.io/debian default/main i386 Packages [635 B]
+Get:62 http://ppa.launchpad.net/ozmartian/apps/ubuntu focal InRelease [18.0 kB]
+Get:63 https://repo.waydro.id focal/main all Packages [7153 B]
+Get:64 http://repo.mysql.com/apt/ubuntu focal/mysql-cluster-8.0 amd64 Packages [11.2 kB]
+Get:59 https://packagecloud.io/slacktechnologies/slack/debian jessie/main amd64 Packages [2320 B]
+Get:65 http://repo.mysql.com/apt/ubuntu focal/mysql-tools amd64 Packages [6193 B]
+Get:66 http://security.ubuntu.com/ubuntu focal-security/main i386 Packages [568 kB]
+Get:67 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/universe amd64 Packages [8628 kB]
+Get:68 http://security.ubuntu.com/ubuntu focal-security/main Translation-en [333 kB]
+Get:69 http://repo.mysql.com/apt/ubuntu focal/mysql-tools i386 Packages [457 B]
+Get:70 http://security.ubuntu.com/ubuntu focal-security/main amd64 DEP-11 Metadata [59.9 kB]
+Get:71 http://security.ubuntu.com/ubuntu focal-security/main amd64 c-n-f Metadata [12.3 kB]
+Get:72 http://security.ubuntu.com/ubuntu focal-security/restricted amd64 Packages [1556 kB]
+Get:73 http://ppa.launchpad.net/cappelikan/ppa/ubuntu focal/main amd64 Packages [580 B]
+Get:74 http://security.ubuntu.com/ubuntu focal-security/restricted i386 Packages [29.1 kB]
+Get:75 http://ppa.launchpad.net/cappelikan/ppa/ubuntu focal/main Translation-en [316 B]
+Get:76 http://security.ubuntu.com/ubuntu focal-security/restricted Translation-en [219 kB]
+Get:77 http://security.ubuntu.com/ubuntu focal-security/restricted amd64 c-n-f Metadata [624 B]
+Get:78 http://security.ubuntu.com/ubuntu focal-security/universe i386 Packages [589 kB]
+Get:79 http://ppa.launchpad.net/ethereum/ethereum/ubuntu focal/main i386 Packages [500 B]
+Get:80 http://ppa.launchpad.net/ethereum/ethereum/ubuntu focal/main amd64 Packages [2844 B]
+Get:81 http://security.ubuntu.com/ubuntu focal-security/universe amd64 Packages [812 kB]
+Get:82 http://ppa.launchpad.net/ethereum/ethereum/ubuntu focal/main Translation-en [828 B]
+Get:83 http://ppa.launchpad.net/git-core/ppa/ubuntu focal/main amd64 Packages [3028 B]
+Get:84 http://ppa.launchpad.net/git-core/ppa/ubuntu focal/main i386 Packages [3028 B]
+Get:85 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/universe Translation-en [5124 kB]
+Get:86 http://ppa.launchpad.net/git-core/ppa/ubuntu focal/main Translation-en [2252 B]
+Get:87 http://security.ubuntu.com/ubuntu focal-security/universe Translation-en [161 kB]
+Get:88 http://security.ubuntu.com/ubuntu focal-security/universe amd64 DEP-11 Metadata [95.5 kB]
+Get:89 http://security.ubuntu.com/ubuntu focal-security/universe amd64 c-n-f Metadata [17.2 kB]
+Get:90 http://security.ubuntu.com/ubuntu focal-security/multiverse amd64 Packages [22.9 kB]
+Get:91 http://security.ubuntu.com/ubuntu focal-security/multiverse i386 Packages [7184 B]
+Get:92 http://ppa.launchpad.net/ozmartian/apps/ubuntu focal/main i386 Packages [576 B]
+Get:93 http://security.ubuntu.com/ubuntu focal-security/multiverse Translation-en [5488 B]
+Get:94 http://security.ubuntu.com/ubuntu focal-security/multiverse amd64 DEP-11 Metadata [940 B]
+Get:95 http://security.ubuntu.com/ubuntu focal-security/multiverse amd64 c-n-f Metadata [528 B]
+Get:96 http://ppa.launchpad.net/ozmartian/apps/ubuntu focal/main amd64 Packages [576 B]
+Get:97 http://ppa.launchpad.net/ozmartian/apps/ubuntu focal/main Translation-en [460 B]
+Get:98 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/universe amd64 DEP-11 Metadata [3603 kB]
+Get:99 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/universe amd64 c-n-f Metadata [265 kB]
+Get:100 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/multiverse i386 Packages [74.7 kB]
+Get:101 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/multiverse amd64 Packages [144 kB]
+Get:102 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/multiverse Translation-en [104 kB]
+Get:103 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/multiverse amd64 DEP-11 Metadata [48.4 kB]
+Get:104 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/multiverse amd64 c-n-f Metadata [9136 B]
+Get:105 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/main amd64 Packages [2425 kB]
+Get:106 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/main i386 Packages [796 kB]
+Get:107 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/main Translation-en [415 kB]
+Get:108 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/main amd64 DEP-11 Metadata [275 kB]
+Get:109 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/main amd64 c-n-f Metadata [16.3 kB]
+Get:110 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/restricted i386 Packages [30.5 kB]
+Get:111 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/restricted amd64 Packages [1666 kB]
+Get:112 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/restricted Translation-en [234 kB]
+Get:113 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/restricted amd64 c-n-f Metadata [620 B]
+Get:114 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/universe i386 Packages [719 kB]
+Get:115 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/universe amd64 Packages [1038 kB]
+Get:116 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/universe Translation-en [243 kB]
+Get:117 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/universe amd64 DEP-11 Metadata [409 kB]
+Get:118 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/universe amd64 c-n-f Metadata [23.8 kB]
+Get:119 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/multiverse amd64 Packages [25.1 kB]
+Get:120 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/multiverse i386 Packages [8440 B]
+Get:121 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/multiverse Translation-en [7408 B]
+Get:122 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/multiverse amd64 DEP-11 Metadata [944 B]
+Get:123 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/multiverse amd64 c-n-f Metadata [592 B]
+Get:124 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/main i386 Packages [36.1 kB]
+Get:125 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/main amd64 Packages [45.7 kB]
+Get:126 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/main Translation-en [16.3 kB]
+Get:127 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/main amd64 DEP-11 Metadata [7980 B]
+Get:128 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/main amd64 c-n-f Metadata [1420 B]
+Get:129 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/restricted amd64 c-n-f Metadata [116 B]
+Get:130 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/universe i386 Packages [13.8 kB]
+Get:131 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/universe amd64 Packages [25.0 kB]
+Get:132 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/universe Translation-en [16.3 kB]
+Get:133 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/universe amd64 DEP-11 Metadata [30.5 kB]
+Get:134 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/universe amd64 c-n-f Metadata [880 B]
+Get:135 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/multiverse amd64 c-n-f Metadata [116 B]
+Reading package lists...
+W: GPG error: https://packages.cloud.google.com/apt cloud-sdk InRelease: The following signatures couldn't be verified because the public key is not available: NO_PUBKEY B53DC80D13EDEF05
+E: The repository 'https://packages.cloud.google.com/apt cloud-sdk InRelease' is not signed.
+W: GPG error: https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04  InRelease: The following signatures were invalid: EXPKEYSIG 4D64390375060AA4 devel:kubic OBS Project <devel:kubic@build.opensuse.org>
+E: The repository 'https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04  InRelease' is not signed.
+Error - Return code: 100
+
+Running check 'APT cache'
+rm -rf /var/lib/apt/lists/*
+DEBIAN_PRIORITY=critical apt-get update
+Ign:1 http://free.nchc.org.tw/linuxmint/packages una InRelease
+Get:2 http://free.nchc.org.tw/linuxmint/packages una Release [24.1 kB]
+Get:3 http://ubuntu.cs.nctu.edu.tw/ubuntu focal InRelease [265 kB]
+Get:4 https://dl.google.com/linux/chrome/deb stable InRelease [1811 B]
+Get:5 http://free.nchc.org.tw/linuxmint/packages una Release.gpg [833 B]
+Get:6 http://packages.microsoft.com/repos/code stable InRelease [3023 B]
+Get:7 http://repo.mysql.com/apt/ubuntu focal InRelease [12.9 kB]
+Get:8 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates InRelease [114 kB]
+Get:9 https://repo.skype.com/deb stable InRelease [4502 B]
+Get:10 https://download.docker.com/linux/ubuntu focal InRelease [57.7 kB]
+Get:11 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports InRelease [108 kB]
+Get:12 https://dl.google.com/linux/chrome/deb stable/main amd64 Packages [1079 B]
+Get:13 https://dl.cloudsmith.io/public/balena/etcher/deb/linuxmint una InRelease [5068 B]
+Get:14 http://free.nchc.org.tw/linuxmint/packages una/main amd64 Packages [16.2 kB]
+Get:15 http://free.nchc.org.tw/linuxmint/packages una/main i386 Packages [15.6 kB]
+Get:16 http://free.nchc.org.tw/linuxmint/packages una/upstream amd64 Packages [50.4 kB]
+Get:17 http://free.nchc.org.tw/linuxmint/packages una/upstream i386 Packages [13.4 kB]
+Get:18 http://ppa.launchpad.net/cappelikan/ppa/ubuntu focal InRelease [18.1 kB]
+Get:19 http://free.nchc.org.tw/linuxmint/packages una/import i386 Packages [3273 B]
+Get:20 http://free.nchc.org.tw/linuxmint/packages una/import amd64 Packages [8181 B]
+Get:21 https://packages.cloud.google.com/apt cloud-sdk InRelease [6361 B]
+Get:22 http://free.nchc.org.tw/linuxmint/packages una/backport i386 Packages [27.1 kB]
+Get:23 http://free.nchc.org.tw/linuxmint/packages una/backport amd64 Packages [90.3 kB]
+Get:24 http://security.ubuntu.com/ubuntu focal-security InRelease [114 kB]
+Get:25 http://packages.microsoft.com/repos/code stable/main armhf Packages [63.7 kB]
+Get:26 https://brave-browser-apt-release.s3.brave.com stable InRelease [7546 B]
+Get:28 http://packages.microsoft.com/repos/code stable/main arm64 Packages [63.3 kB]
+Get:29 http://packages.microsoft.com/repos/code stable/main amd64 Packages [62.9 kB]
+Get:30 http://archive.canonical.com/ubuntu focal InRelease [12.1 kB]
+Get:31 http://repo.mysql.com/apt/ubuntu focal/mysql-cluster-8.0 Sources [1059 B]
+Get:32 http://repo.mysql.com/apt/ubuntu focal/mysql-apt-config i386 Packages [565 B]
+Get:33 http://repo.mysql.com/apt/ubuntu focal/mysql-apt-config amd64 Packages [565 B]
+Get:34 http://repo.mysql.com/apt/ubuntu focal/mysql-cluster-8.0 amd64 Packages [11.2 kB]
+Get:35 http://repo.mysql.com/apt/ubuntu focal/mysql-tools amd64 Packages [6193 B]
+Get:36 http://repo.mysql.com/apt/ubuntu focal/mysql-tools i386 Packages [457 B]
+Get:37 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/main amd64 Packages [970 kB]
+Get:38 https://download.sublimetext.com apt/stable/ InRelease [2536 B]
+Get:39 https://repo.skype.com/deb stable/main amd64 Packages [2191 B]
+Get:40 https://download.docker.com/linux/ubuntu focal/stable amd64 Packages [24.7 kB]
+Get:41 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/main i386 Packages [718 kB]
+Get:42 http://ppa.launchpad.net/ethereum/ethereum/ubuntu focal InRelease [17.5 kB]
+Get:43 https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04  InRelease [1642 B]
+Err:21 https://packages.cloud.google.com/apt cloud-sdk InRelease
+  The following signatures couldn't be verified because the public key is not available: NO_PUBKEY B53DC80D13EDEF05
+Get:44 https://repo.waydro.id focal InRelease [1343 B]
+Get:45 https://packages.element.io/debian default InRelease [2898 B]
+Get:46 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/main Translation-en [506 kB]
+Get:47 https://brave-browser-apt-release.s3.brave.com stable/main amd64 Packages [4246 B]
+Get:48 https://dl.cloudsmith.io/public/balena/etcher/deb/linuxmint una/main i386 Packages [1363 B]
+Get:49 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/main amd64 DEP-11 Metadata [494 kB]
+Get:50 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/main amd64 c-n-f Metadata [29.5 kB]
+Get:51 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/restricted i386 Packages [8112 B]
+Get:52 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/restricted amd64 Packages [22.0 kB]
+Err:43 https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04  InRelease
+  The following signatures were invalid: EXPKEYSIG 4D64390375060AA4 devel:kubic OBS Project <devel:kubic@build.opensuse.org>
+Get:53 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/restricted Translation-en [6212 B]
+Get:54 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/restricted amd64 c-n-f Metadata [392 B]
+Get:55 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/universe amd64 Packages [8628 kB]
+Get:56 https://dl.cloudsmith.io/public/balena/etcher/deb/linuxmint una/main amd64 Packages [1681 B]
+Get:57 http://archive.canonical.com/ubuntu focal/partner amd64 Packages [856 B]
+Get:58 https://download.sublimetext.com apt/stable/ Packages [6373 B]
+Get:59 http://ppa.launchpad.net/git-core/ppa/ubuntu focal InRelease [23.8 kB]
+Get:60 http://archive.canonical.com/ubuntu focal/partner Translation-en [384 B]
+Get:61 http://security.ubuntu.com/ubuntu focal-security/main amd64 Packages [2045 kB]
+Get:27 https://packagecloud.io/slacktechnologies/slack/debian jessie InRelease [24.4 kB]
+Get:62 https://packages.element.io/debian default/main amd64 Packages [1131 B]
+Get:63 http://ppa.launchpad.net/ozmartian/apps/ubuntu focal InRelease [18.0 kB]
+Get:65 https://packages.element.io/debian default/main i386 Packages [635 B]
+Get:66 http://ppa.launchpad.net/cappelikan/ppa/ubuntu focal/main amd64 Packages [580 B]
+Get:67 https://repo.waydro.id focal/main all Packages [7153 B]
+Get:68 http://ppa.launchpad.net/cappelikan/ppa/ubuntu focal/main Translation-en [316 B]
+Get:69 http://security.ubuntu.com/ubuntu focal-security/main i386 Packages [568 kB]
+Get:64 https://packagecloud.io/slacktechnologies/slack/debian jessie/main amd64 Packages [2320 B]
+Get:70 http://security.ubuntu.com/ubuntu focal-security/main Translation-en [333 kB]
+Get:71 http://security.ubuntu.com/ubuntu focal-security/main amd64 DEP-11 Metadata [59.9 kB]
+Get:72 http://security.ubuntu.com/ubuntu focal-security/main amd64 c-n-f Metadata [12.3 kB]
+Get:73 http://security.ubuntu.com/ubuntu focal-security/restricted amd64 Packages [1556 kB]
+Get:74 http://security.ubuntu.com/ubuntu focal-security/restricted i386 Packages [29.1 kB]
+Get:75 http://security.ubuntu.com/ubuntu focal-security/restricted Translation-en [219 kB]
+Get:76 http://security.ubuntu.com/ubuntu focal-security/restricted amd64 c-n-f Metadata [624 B]
+Get:77 http://security.ubuntu.com/ubuntu focal-security/universe amd64 Packages [812 kB]
+Get:78 http://ppa.launchpad.net/ethereum/ethereum/ubuntu focal/main i386 Packages [500 B]
+Get:79 http://ppa.launchpad.net/ethereum/ethereum/ubuntu focal/main amd64 Packages [2844 B]
+Get:80 http://security.ubuntu.com/ubuntu focal-security/universe i386 Packages [589 kB]
+Get:81 http://ppa.launchpad.net/ethereum/ethereum/ubuntu focal/main Translation-en [828 B]
+Get:82 http://ppa.launchpad.net/git-core/ppa/ubuntu focal/main i386 Packages [3028 B]
+Get:83 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/universe i386 Packages [4642 kB]
+Get:84 http://ppa.launchpad.net/git-core/ppa/ubuntu focal/main amd64 Packages [3028 B]
+Get:85 http://security.ubuntu.com/ubuntu focal-security/universe Translation-en [161 kB]
+Get:86 http://ppa.launchpad.net/git-core/ppa/ubuntu focal/main Translation-en [2252 B]
+Get:87 http://security.ubuntu.com/ubuntu focal-security/universe amd64 DEP-11 Metadata [95.5 kB]
+Get:88 http://security.ubuntu.com/ubuntu focal-security/universe amd64 c-n-f Metadata [17.2 kB]
+Get:89 http://security.ubuntu.com/ubuntu focal-security/multiverse i386 Packages [7184 B]
+Get:90 http://security.ubuntu.com/ubuntu focal-security/multiverse amd64 Packages [22.9 kB]
+Get:91 http://security.ubuntu.com/ubuntu focal-security/multiverse Translation-en [5488 B]
+Get:92 http://security.ubuntu.com/ubuntu focal-security/multiverse amd64 DEP-11 Metadata [940 B]
+Get:93 http://security.ubuntu.com/ubuntu focal-security/multiverse amd64 c-n-f Metadata [528 B]
+Get:94 http://ppa.launchpad.net/ozmartian/apps/ubuntu focal/main i386 Packages [576 B]
+Get:95 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/universe Translation-en [5124 kB]
+Get:96 http://ppa.launchpad.net/ozmartian/apps/ubuntu focal/main amd64 Packages [576 B]
+Get:97 http://ppa.launchpad.net/ozmartian/apps/ubuntu focal/main Translation-en [460 B]
+Get:98 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/universe amd64 DEP-11 Metadata [3603 kB]
+Get:99 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/universe amd64 c-n-f Metadata [265 kB]
+Get:100 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/multiverse amd64 Packages [144 kB]
+Get:101 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/multiverse i386 Packages [74.7 kB]
+Get:102 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/multiverse Translation-en [104 kB]
+Get:103 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/multiverse amd64 DEP-11 Metadata [48.4 kB]
+Get:104 http://ubuntu.cs.nctu.edu.tw/ubuntu focal/multiverse amd64 c-n-f Metadata [9136 B]
+Get:105 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/main amd64 Packages [2425 kB]
+Get:106 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/main i386 Packages [796 kB]
+Get:107 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/main Translation-en [415 kB]
+Get:108 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/main amd64 DEP-11 Metadata [275 kB]
+Get:109 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/main amd64 c-n-f Metadata [16.3 kB]
+Get:110 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/restricted amd64 Packages [1666 kB]
+Get:111 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/restricted i386 Packages [30.5 kB]
+Get:112 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/restricted Translation-en [234 kB]
+Get:113 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/restricted amd64 c-n-f Metadata [620 B]
+Get:114 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/universe amd64 Packages [1038 kB]
+Get:115 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/universe i386 Packages [719 kB]
+Get:116 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/universe Translation-en [243 kB]
+Get:117 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/universe amd64 DEP-11 Metadata [409 kB]
+Get:118 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/universe amd64 c-n-f Metadata [23.8 kB]
+Get:119 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/multiverse amd64 Packages [25.1 kB]
+Get:120 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/multiverse i386 Packages [8440 B]
+Get:121 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/multiverse Translation-en [7408 B]
+Get:122 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/multiverse amd64 DEP-11 Metadata [944 B]
+Get:123 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-updates/multiverse amd64 c-n-f Metadata [592 B]
+Get:124 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/main i386 Packages [36.1 kB]
+Get:125 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/main amd64 Packages [45.7 kB]
+Get:126 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/main Translation-en [16.3 kB]
+Get:127 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/main amd64 DEP-11 Metadata [7980 B]
+Get:128 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/main amd64 c-n-f Metadata [1420 B]
+Get:129 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/restricted amd64 c-n-f Metadata [116 B]
+Get:130 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/universe amd64 Packages [25.0 kB]
+Get:131 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/universe i386 Packages [13.8 kB]
+Get:132 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/universe Translation-en [16.3 kB]
+Get:133 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/universe amd64 DEP-11 Metadata [30.5 kB]
+Get:134 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/universe amd64 c-n-f Metadata [880 B]
+Get:135 http://ubuntu.cs.nctu.edu.tw/ubuntu focal-backports/multiverse amd64 c-n-f Metadata [116 B]
+Reading package lists...
+W: GPG error: https://packages.cloud.google.com/apt cloud-sdk InRelease: The following signatures couldn't be verified because the public key is not available: NO_PUBKEY B53DC80D13EDEF05
+E: The repository 'https://packages.cloud.google.com/apt cloud-sdk InRelease' is not signed.
+W: GPG error: https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04  InRelease: The following signatures were invalid: EXPKEYSIG 4D64390375060AA4 devel:kubic OBS Project <devel:kubic@build.opensuse.org>
+E: The repository 'https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04  InRelease' is not signed.
+Error - Return code: 100
+mintupgrade-inhibit-power: no process found

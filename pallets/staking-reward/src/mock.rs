@@ -19,7 +19,7 @@ frame_support::construct_runtime!(
 		UncheckedExtrinsic = UncheckedExtrinsic,
 	{
 		System: frame_system,
-	Balances: pallet_balances,
+    Balances: pallet_balances,
 		StakingReward: staking_reward,
 	}
 );
