@@ -16,6 +16,7 @@ members = [
     "pallets/storage-cache",
     "pallets/struct-storage",
     "pallets/weights",
+    "pallets/frame-offchain-worker",
     "runtime",
 ]
 [profile.release]

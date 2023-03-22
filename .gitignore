@@ -33,3 +33,4 @@ para-*-wasm
 sweep.timestamp
 customSpec.json
 customSpecRaw.json
+pallets/frame-basic
