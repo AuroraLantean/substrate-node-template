@@ -32,7 +32,7 @@ use sp_runtime::{
 	BuildStorage,
 };
 // Reexport crate as its pallet name for construct_runtime.
-use crate as pallet_example_basic;
+use crate as target;
 
 type UncheckedExtrinsic = frame_system::mocking::MockUncheckedExtrinsic<Test>;
 type Block = frame_system::mocking::MockBlock<Test>;
@@ -46,7 +46,7 @@ frame_support::construct_runtime!(
 	{
 		System: frame_system::{Pallet, Call, Config, Storage, Event<T>},
 		Balances: pallet_balances::{Pallet, Call, Storage, Config<T>, Event<T>},
-		Example: pallet_example_basic::{Pallet, Call, Storage, Config<T>, Event<T>},
+		Target: target::{Pallet, Call, Storage, Config<T>, Event<T>},
 	}
 );
 
@@ -102,10 +102,10 @@ pub fn new_test_ext() -> sp_io::TestExternalities {
 		// We use default for brevity, but you can configure as desired if needed.
 		system: Default::default(),
 		balances: Default::default(),
-		example: pallet_example_basic::GenesisConfig {
-			dummy: 42,
+		target: target::GenesisConfig {
+			total_balance: 42,
 			// we configure the map with (key, value) pairs.
-			bar: vec![(1, 2), (2, 3)],
+			accounts: vec![(1, 2), (2, 3)],
 			foo: 24,
 		},
 	}
@@ -120,25 +120,25 @@ fn it_works_for_optional_value() {
 		// Check that GenesisBuilder works properly.
 		let val1 = 42;
 		let val2 = 27;
-		assert_eq!(Example::dummy(), Some(val1));
+		assert_eq!(Target::total_balance(), Some(val1));
 
 		// Check that accumulate works when we have Some value in Dummy already.
-		assert_ok!(Example::accumulate_dummy(RuntimeOrigin::signed(1), val2));
-		assert_eq!(Example::dummy(), Some(val1 + val2));
+		assert_ok!(Target::add(RuntimeOrigin::signed(1), val2));
+		assert_eq!(Target::total_balance(), Some(val1 + val2));
 
 		// Check that accumulate works when we Dummy has None in it.
-		<Example as OnInitialize<u64>>::on_initialize(2);
-		assert_ok!(Example::accumulate_dummy(RuntimeOrigin::signed(1), val1));
-		assert_eq!(Example::dummy(), Some(val1 + val2 + val1));
+		<Target as OnInitialize<u64>>::on_initialize(2);
+		assert_ok!(Target::add(RuntimeOrigin::signed(1), val1));
+		assert_eq!(Target::total_balance(), Some(val1 + val2 + val1));
 	});
 }
 
 #[test]
 fn it_works_for_default_value() {
 	new_test_ext().execute_with(|| {
-		assert_eq!(Example::foo(), 24);
-		assert_ok!(Example::accumulate_foo(RuntimeOrigin::signed(1), 1));
-		assert_eq!(Example::foo(), 25);
+		assert_eq!(Target::foo(), 24);
+		assert_ok!(Target::accumulate_foo(RuntimeOrigin::signed(1), 1));
+		assert_eq!(Target::foo(), 25);
 	});
 }
 
@@ -146,26 +146,26 @@ fn it_works_for_default_value() {
 fn set_dummy_works() {
 	new_test_ext().execute_with(|| {
 		let test_val = 133;
-		assert_ok!(Example::set_dummy(RuntimeOrigin::root(), test_val.into()));
-		assert_eq!(Example::dummy(), Some(test_val));
+		assert_ok!(Target::set_balance(RuntimeOrigin::root(), test_val.into()));
+		assert_eq!(Target::total_balance(), Some(test_val));
 	});
 }
 
 #[test]
 fn signed_ext_watch_dummy_works() {
 	new_test_ext().execute_with(|| {
-		let call = pallet_example_basic::Call::set_dummy { new_value: 10 }.into();
+		let call = target::Call::set_balance { new_value: 10 }.into();
 		let info = DispatchInfo::default();
 
 		assert_eq!(
-			WatchDummy::<Test>(PhantomData)
+			WatchBalance::<Test>(PhantomData)
 				.validate(&1, &call, &info, 150)
 				.unwrap()
 				.priority,
 			u64::MAX,
 		);
 		assert_eq!(
-			WatchDummy::<Test>(PhantomData).validate(&1, &call, &info, 250),
+			WatchBalance::<Test>(PhantomData).validate(&1, &call, &info, 250),
 			InvalidTransaction::ExhaustsResources.into(),
 		);
 	})
@@ -183,15 +183,15 @@ fn counted_map_works() {
 #[test]
 fn weights_work() {
 	// must have a defined weight.
-	let default_call = pallet_example_basic::Call::<Test>::accumulate_dummy { increase_by: 10 };
+	let default_call = target::Call::<Test>::add { increase_by: 10 };
 	let info1 = default_call.get_dispatch_info();
 	// aka. `let info = <Call<Test> as GetDispatchInfo>::get_dispatch_info(&default_call);`
 	// TODO: account for proof size weight
 	assert!(info1.weight.ref_time() > 0);
 
-	// `set_dummy` is simpler than `accumulate_dummy`, and the weight
+	// `set_balance` is simpler than `add`, and the weight
 	//   should be less.
-	let custom_call = pallet_example_basic::Call::<Test>::set_dummy { new_value: 20 };
+	let custom_call = target::Call::<Test>::set_balance { new_value: 20 };
 	let info2 = custom_call.get_dispatch_info();
 	// TODO: account for proof size weight
 	assert!(info1.weight.ref_time() > info2.weight.ref_time());
