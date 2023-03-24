@@ -212,6 +212,8 @@ pub mod pallet {
 		InsufficientUnstaked,
 		AlreadyMember,
 		NotMember,
+		UserInsufficient,
+		UserCountNone,
 		InsertNewMember,
 		MembershipLimitReached,
 	}
@@ -487,10 +489,9 @@ pub mod pallet {
 
 			let user_count = match <UserCount<T>>::get() {
 				None => 1,
-				//return Err(Error::<T>::NoneValue),
 				Some(old) => old.checked_add(1).ok_or_else(|| Error::<T>::UserCountOverflow)?,
 			};
-			info!("user_count: {:?}", user_count);
+			info!("new user_count: {:?}", user_count);
 			let user = UserInfo {
 				id: user_id,
 				username: arr,
@@ -502,22 +503,33 @@ pub mod pallet {
 			ensure!(!<UserStakes<T>>::contains_key(&from), Error::<T>::AlreadyMember);
 			<UserStakes<T>>::insert(&from, user);
 
-			//UserCount::<T>::mutate(|v| *v += 1);
-			<UserCount<T>>::put(user_count); //update count after insert
+			<UserCount<T>>::put(user_count);
+
 			Self::deposit_event(Event::UserAdded { user_index: user_id, user: from });
 			Ok(())
 		}
-		/*
-		   fn remove_user(origin) -> DispatchResult {
-			 let old_user = ensure_signed(origin)?;
-			 ensure!(<UserStakes<T>>::contains_key(&old_user), Error::<T>::NotUser);
 
-			 <UserStakes<T>>::remove(&old_user);
-			 UserCount::mutate(|v| *v -= 1);
-			 Self::deposit_event(Event::UserRemoved(old_user));
-			 Ok(())
-		   }
-		*/
+		//------------------==
+		#[pallet::call_index(12)]
+		#[pallet::weight(10_000 + T::DbWeight::get().writes(1).ref_time())]
+		pub fn remove_user(origin: OriginFor<T>) -> DispatchResult {
+			let old_user = ensure_signed(origin)?;
+			ensure!(<UserStakes<T>>::contains_key(&old_user), Error::<T>::NotMember);
+
+			<UserStakes<T>>::remove(&old_user);
+
+			match <UserCount<T>>::get() {
+				None => return Err(Error::<T>::UserCountNone.into()),
+				Some(old) => {
+					let new = old.checked_sub(1).ok_or_else(|| Error::<T>::UserInsufficient)?;
+					<UserCount<T>>::put(new);
+				},
+			};
+
+			Self::deposit_event(Event::MemberRemoved(old_user));
+			Ok(())
+		}
+
 		//------------------==
 		#[pallet::call_index(3)]
 		#[pallet::weight(10_000 + T::DbWeight::get().reads_writes(1,1).ref_time())]
